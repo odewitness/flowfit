@@ -2222,7 +2222,6 @@
         async function onAuthSuccess(user){
           _currentUserId = user.id;
           const firstname = user.user_metadata?.firstname || '';
-          if(firstname) DB.set('ff_firstname', firstname);
           document.getElementById('burger-user-email').textContent = user.email;
           document.getElementById('burger-user-label').textContent = firstname ? `Bonjour ${firstname} 🌸` : 'Compte connecté';
           document.getElementById('auth-screen').classList.add('hidden');
@@ -2241,10 +2240,13 @@
             pas: {},
             pasGoal: 10000,
           };
-          // Vide le localStorage
+          // Vide le localStorage (sauf ff_firstname)
           ['ff_workouts','ff_sessions','ff_cycle','ff_logs',
           'ff_health','ff_videos','ff_planning','ff_period_history','ff_pas','ff_pas_goal']
             .forEach(k => localStorage.removeItem(k));
+
+          // Sauvegarde le prénom APRÈS le vidage (lu depuis les métadonnées Supabase)
+          if(firstname) DB.set('ff_firstname', firstname);
 
           await loadFromSupabase(user.id);
           setSyncStatus('saved');
