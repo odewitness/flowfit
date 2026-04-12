@@ -2220,7 +2220,8 @@
 
         async function onAuthSuccess(user){
           _currentUserId = user.id;
-          const firstname = user.user_metadata?.firstname || '';
+          // Récupère le prénom depuis les user_metadata ou depuis le localStorage s'il existait déjà
+          let firstname = user.user_metadata?.firstname || DB.get('ff_firstname', '');
           document.getElementById('burger-user-email').textContent = user.email;
           document.getElementById('burger-user-label').textContent = firstname ? `Bonjour ${firstname} 🌸` : 'Compte connecté';
           document.getElementById('auth-screen').classList.add('hidden');
