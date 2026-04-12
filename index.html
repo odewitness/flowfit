@@ -1625,10 +1625,10 @@
                 <div class="card" id="home-pas-card" style="cursor:pointer;" onclick="goTo('sport');switchSportTab('pas');">
                     <div class="card-title">Pas aujourd'hui 👟</div>
                     <div style="display:flex;align-items:center;gap:12px;">
-                        <div style="font-family:var(--font-display);font-size:42px;color:var(--menthe);line-height:1;" id="home-pas-val">0</div>
+                        <div style="font-family:var(--font-display);font-size:42px;color:var(--rose);line-height:1;" id="home-pas-val">0</div>
                         <div style="flex:1;">
                             <div style="background:var(--bg3);border-radius:20px;height:8px;overflow:hidden;margin-bottom:4px;">
-                                <div id="home-pas-bar" style="background:var(--menthe);height:100%;border-radius:20px;transition:width .4s;width:0%"></div>
+                                <div id="home-pas-bar" style="background:var(--rose);height:100%;border-radius:20px;transition:width .4s;width:0%"></div>
                             </div>
                             <div style="font-size:11px;color:var(--text3);" id="home-pas-lbl">Objectif : 10 000 pas</div>
                         </div>
@@ -1761,11 +1761,11 @@
                     <div class="card">
                         <div class="card-title">Aujourd'hui</div>
                         <div style="text-align:center;padding:16px 0 8px;">
-                            <div style="font-family:var(--font-display);font-size:64px;color:var(--menthe);line-height:1;" id="pas-today-val">0</div>
+                            <div style="font-family:var(--font-display);font-size:64px;color:var(--rose);line-height:1;" id="pas-today-val">0</div>
                             <div style="font-size:13px;color:var(--text2);margin-top:4px;">pas aujourd'hui</div>
                             <div style="margin-top:8px;" id="pas-goal-bar-wrap">
                                 <div style="background:var(--bg3);border-radius:20px;height:8px;overflow:hidden;margin:0 auto;max-width:260px;">
-                                    <div id="pas-goal-bar" style="background:var(--menthe);height:100%;border-radius:20px;transition:width .4s;width:0%"></div>
+                                    <div id="pas-goal-bar" style="background:var(--rose);height:100%;border-radius:20px;transition:width .4s;width:0%"></div>
                                 </div>
                                 <div style="font-size:11px;color:var(--text3);margin-top:4px;" id="pas-goal-label">Objectif : 10 000 pas</div>
                             </div>
@@ -2486,7 +2486,7 @@
             if(homePasLbl){
                 const pct = Math.round((todayPas/pasGoal)*100);
                 homePasLbl.textContent = todayPas>=pasGoal ? `✓ Objectif atteint (${pasGoal.toLocaleString('fr-FR')} pas) 🏆` : `${pct}% de l'objectif · ${pasGoal.toLocaleString('fr-FR')} pas`;
-                homePasLbl.style.color = todayPas>=pasGoal ? 'var(--menthe)' : 'var(--text3)';
+                homePasLbl.style.color = todayPas>=pasGoal ? 'var(--rose)' : 'var(--text3)';
             }
         }
 
@@ -3643,7 +3643,7 @@ function renderPasScreen(){
   if(lbl){
     const pct = Math.round((todayPas/goal)*100);
     lbl.textContent = `Objectif : ${goal.toLocaleString('fr-FR')} pas${todayPas>=goal?' ✓ Atteint !':' ('+pct+'%)'}`;
-    lbl.style.color = todayPas>=goal ? 'var(--menthe)' : 'var(--text3)';
+    lbl.style.color = todayPas>=goal ? 'var(--rose)' : 'var(--text3)';
   }
   const input = document.getElementById('pas-input');
   if(input && todayPas) input.value = todayPas;
