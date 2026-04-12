@@ -1492,7 +1492,7 @@
             display: flex;
             align-items: center;
             gap: 14px;
-            padding: 14px 16px;
+            padding: 16px 18px;
             background: var(--bg3);
             border: 1px solid var(--border);
             border-radius: var(--radius-sm);
@@ -1529,9 +1529,25 @@
         #modal-box .field textarea {
             padding: 13px 16px;
         }
+        #modal-body {
+            padding: 0 2px;
+        }
+        #modal-body .wf-section,
+        #modal-body > .field,
+        #modal-body > .kcal-row,
+        #modal-body > .phases-multi-select,
+        #modal-body > div {
+            margin-left: 0;
+            margin-right: 0;
+        }
         
         /* ── Burger btn hidden (no longer needed in topbar) ── */
         #burger-btn { display: none !important; }
+
+        #modal-body .wf-section {
+            box-sizing: border-box;
+            width: 100%;
+        }
     </style>
 </head>
 
@@ -1829,7 +1845,7 @@
     <div id="sport-sheet-overlay" onclick="closeSportSheet()" style="display:none;position:fixed;inset:0;z-index:150;background:rgba(61,44,38,.35);backdrop-filter:blur(3px);"></div>
     <div id="sport-sheet" style="position:fixed;bottom:-300px;left:50%;transform:translateX(-50%);width:100%;max-width:430px;z-index:160;background:var(--bg2);border-radius:var(--radius) var(--radius) 0 0;border:1px solid var(--border2);border-bottom:none;padding:20px 28px calc(var(--safe-bottom)+28px);transition:bottom .3s cubic-bezier(.4,0,.2,1);box-shadow:0 -4px 24px rgba(61,44,38,.10);">
         <div style="width:36px;height:4px;background:var(--border2);border-radius:2px;margin:0 auto 20px;"></div>
-        <div style="font-family:var(--font-display);font-size:19px;color:var(--text);margin-bottom:16px;">Sport</div>
+        <div style="font-family:var(--font-display);font-size:19px;color:var(--text);margin-bottom:16px;padding-left:4px;">Sport</div>
         <div style="display:flex;flex-direction:column;gap:6px;">
             <button class="sport-sheet-item" onclick="goTo('seances');closeSportSheet();">
                 <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="1.8" fill="none"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 8h10M7 12h10M7 16h6"/></svg>
