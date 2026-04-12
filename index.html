@@ -1985,9 +1985,10 @@
                     DB.set('ff_planning', state.planning);
                     DB.set('ff_period_history', state.periodHistory);
                 } else {
-                    // Nouvel utilisateur : on pousse le cache local vers Supabase
-                    await save();
-                }
+                // Nouvel utilisateur : BDD vide, on ne pousse rien
+                // Le premier save() sera déclenché à la première action de l'utilisateur
+                setSyncStatus('saved');
+              }
             } catch (e) {
                 console.error('Supabase load error:', e);
                 showToast('⚠️ Chargement depuis le cache local');
@@ -2089,14 +2090,31 @@
             showToast('👋 Déconnectée');
         }
 
-        async function onAuthSuccess(user) {
-            _currentUserId = user.id;
-            document.getElementById('burger-user-email').textContent = user.email;
-            document.getElementById('auth-screen').classList.add('hidden');
-            setSyncStatus('syncing');
-            await loadFromSupabase(user.id);
-            setSyncStatus('saved');
-            renderHome();
+        async function onAuthSuccess(user){
+          _currentUserId = user.id;
+          document.getElementById('burger-user-email').textContent = user.email;
+          document.getElementById('auth-screen').classList.add('hidden');
+          setSyncStatus('syncing');
+
+          // Réinitialise le state et le cache local avant de charger
+          state = {
+            workouts: [],
+            sessions: [],
+            cycle: null,
+            logs: {},
+            health: { weight:[], temperature:[], measurements:[] },
+            videos: [],
+            planning: {},
+            periodHistory: [],
+          };
+          // Vide le localStorage
+          ['ff_workouts','ff_sessions','ff_cycle','ff_logs',
+          'ff_health','ff_videos','ff_planning','ff_period_history']
+            .forEach(k => localStorage.removeItem(k));
+
+          await loadFromSupabase(user.id);
+          setSyncStatus('saved');
+          renderHome();
         }
 
         // ── Init : vérifie la session existante ──
