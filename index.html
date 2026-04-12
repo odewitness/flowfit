@@ -1562,6 +1562,7 @@
                 <button class="auth-tab" id="tab-signup" onclick="switchAuthTab('signup')">Créer un compte</button>
             </div>
             <div class="auth-error" id="auth-error"></div>
+            <div class="field" id="auth-firstname-field" style="display:none;"><label>Prénom</label><input type="text" id="auth-firstname" placeholder="Ton prénom" autocomplete="given-name" /></div>
             <div class="field"><label>Email</label><input type="email" id="auth-email" placeholder="ton@email.com" autocomplete="email" /></div>
             <div class="field"><label>Mot de passe</label><input type="password" id="auth-password" placeholder="••••••••" autocomplete="current-password" /></div>
             <div class="field" id="auth-confirm-field" style="display:none;"><label>Confirmer le mot de passe</label><input type="password" id="auth-confirm" placeholder="••••••••" autocomplete="new-password" /></div>
@@ -1621,14 +1622,18 @@
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <!-- SÉANCES -->
-            <div id="screen-seances" class="screen">
-                <div class="section-title">Séances</div>
-                <div class="section-sub">Crée et lance tes entraînements</div>
-                <button class="btn btn-primary" onclick="openNewWorkout()" style="margin-bottom:16px;">+ Nouvelle séance</button>
-                <div id="workouts-list"></div>
+                <div class="card" id="home-pas-card" style="cursor:pointer;" onclick="goTo('sport');switchSportTab('pas');">
+                    <div class="card-title">Pas aujourd'hui 👟</div>
+                    <div style="display:flex;align-items:center;gap:12px;">
+                        <div style="font-family:var(--font-display);font-size:42px;color:var(--menthe);line-height:1;" id="home-pas-val">0</div>
+                        <div style="flex:1;">
+                            <div style="background:var(--bg3);border-radius:20px;height:8px;overflow:hidden;margin-bottom:4px;">
+                                <div id="home-pas-bar" style="background:var(--menthe);height:100%;border-radius:20px;transition:width .4s;width:0%"></div>
+                            </div>
+                            <div style="font-size:11px;color:var(--text3);" id="home-pas-lbl">Objectif : 10 000 pas</div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- CALENDRIER -->
@@ -1715,11 +1720,85 @@
                 </div>
             </div>
 
-            <!-- ENTRÉES / ADMIN -->
-            <div id="screen-entrees" class="screen">
-                <div class="section-title">Entrées</div>
-                <div class="section-sub">Modifier ou supprimer des séances réalisées</div>
-                <div id="entrees-list"></div>
+            <!-- SPORT HUB -->
+            <div id="screen-sport" class="screen">
+                <div class="section-title">Sport</div>
+                <!-- Sub-tabs -->
+                <div style="display:flex;gap:6px;margin-bottom:16px;background:var(--bg3);border-radius:var(--radius-sm);padding:4px;">
+                    <button class="sport-tab" id="sport-tab-seances" onclick="switchSportTab('seances')" style="flex:1;padding:9px 8px;border-radius:var(--radius-xs);border:none;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;background:var(--bg2);color:var(--text);box-shadow:0 1px 3px rgba(180,130,110,.1);">🏋️ Séances</button>
+                    <button class="sport-tab" id="sport-tab-videos" onclick="switchSportTab('videos')" style="flex:1;padding:9px 8px;border-radius:var(--radius-xs);border:none;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;background:none;color:var(--text2);">🎬 Vidéos</button>
+                    <button class="sport-tab" id="sport-tab-pas" onclick="switchSportTab('pas')" style="flex:1;padding:9px 8px;border-radius:var(--radius-xs);border:none;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;background:none;color:var(--text2);">👟 Pas</button>
+                    <button class="sport-tab" id="sport-tab-entrees" onclick="switchSportTab('entrees')" style="flex:1;padding:9px 8px;border-radius:var(--radius-xs);border:none;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;background:none;color:var(--text2);">📋 Entrées</button>
+                </div>
+
+                <!-- Panel Séances -->
+                <div id="sport-panel-seances">
+                    <div class="section-sub">Crée et lance tes entraînements</div>
+                    <button class="btn btn-primary" onclick="openNewWorkout()" style="margin-bottom:16px;">+ Nouvelle séance</button>
+                    <div id="workouts-list2"></div>
+                </div>
+
+                <!-- Panel Vidéos -->
+                <div id="sport-panel-videos" style="display:none;">
+                    <div class="section-sub">Séances YouTube liées à ton cycle</div>
+                    <button class="btn btn-primary" onclick="openAddVideo()" style="margin-bottom:16px;">+ Ajouter une vidéo</button>
+                    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;" id="video-phase-filter2">
+                        <button class="btn btn-ghost btn-sm" style="font-size:11px;" onclick="filterVideos2('')">Toutes</button>
+                        <button class="btn btn-ghost btn-sm" style="font-size:11px;" onclick="filterVideos2('mens')">🌊 Règles</button>
+                        <button class="btn btn-ghost btn-sm" style="font-size:11px;" onclick="filterVideos2('folliculaire')">🌱 Follic.</button>
+                        <button class="btn btn-ghost btn-sm" style="font-size:11px;" onclick="filterVideos2('ovulation')">⚡ Ovul.</button>
+                        <button class="btn btn-ghost btn-sm" style="font-size:11px;" onclick="filterVideos2('luteale')">🍂 Lutéale</button>
+                    </div>
+                    <div id="video-instructor-filter2" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;"></div>
+                    <div id="videos-list2"></div>
+                </div>
+
+                <!-- Panel Nombre de Pas -->
+                <div id="sport-panel-pas" style="display:none;">
+                    <div class="section-sub">Tracker tes pas quotidiens</div>
+                    <div class="card">
+                        <div class="card-title">Aujourd'hui</div>
+                        <div style="text-align:center;padding:16px 0 8px;">
+                            <div style="font-family:var(--font-display);font-size:64px;color:var(--menthe);line-height:1;" id="pas-today-val">0</div>
+                            <div style="font-size:13px;color:var(--text2);margin-top:4px;">pas aujourd'hui</div>
+                            <div style="margin-top:8px;" id="pas-goal-bar-wrap">
+                                <div style="background:var(--bg3);border-radius:20px;height:8px;overflow:hidden;margin:0 auto;max-width:260px;">
+                                    <div id="pas-goal-bar" style="background:var(--menthe);height:100%;border-radius:20px;transition:width .4s;width:0%"></div>
+                                </div>
+                                <div style="font-size:11px;color:var(--text3);margin-top:4px;" id="pas-goal-label">Objectif : 10 000 pas</div>
+                            </div>
+                        </div>
+                        <div style="display:flex;gap:8px;margin-top:12px;">
+                            <input type="number" id="pas-input" inputmode="numeric" placeholder="Ex: 8500" min="0" max="99999"
+                                style="flex:1;padding:12px 14px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);font-size:18px;font-family:var(--font-display);color:var(--text);"/>
+                            <button class="btn btn-primary" style="width:auto;padding:12px 18px;" onclick="savePasToday()">✓</button>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                            <div class="card-title" style="margin-bottom:0;">Objectif quotidien</div>
+                        </div>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <input type="number" id="pas-goal-input" inputmode="numeric" placeholder="10000" min="1000" max="50000"
+                                style="flex:1;padding:10px 14px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);font-size:15px;color:var(--text);"/>
+                            <button class="btn btn-ghost btn-sm" style="width:auto;" onclick="savePasGoal()">💾</button>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">7 derniers jours</div>
+                        <div style="display:flex;align-items:flex-end;gap:4px;height:90px;" id="pas-week-chart"></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">Historique</div>
+                        <div id="pas-history-list"></div>
+                    </div>
+                </div>
+
+                <!-- Panel Entrées -->
+                <div id="sport-panel-entrees" style="display:none;">
+                    <div class="section-sub">Modifier ou supprimer des séances réalisées</div>
+                    <div id="entrees-list2"></div>
+                </div>
             </div>
 
             <!-- SANTÉ -->
@@ -1816,23 +1895,11 @@
                     <div class="card-title">Stats vidéos 🎬</div>
                     <div id="video-stats-list"></div>
                 </div>
-                </div><!-- end sante-panel-stats -->
-            </div>
-
-            <!-- VIDÉOS -->
-            <div id="screen-videos" class="screen">
-                <div class="section-title">Vidéos</div>
-                <div class="section-sub">Séances YouTube liées à ton cycle</div>
-                <button class="btn btn-primary" onclick="openAddVideo()" style="margin-bottom:16px;">+ Ajouter une vidéo</button>
-                <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;" id="video-phase-filter">
-                    <button class="btn btn-ghost btn-sm" style="font-size:11px;" onclick="filterVideos('')">Toutes</button>
-                    <button class="btn btn-ghost btn-sm" style="font-size:11px;" onclick="filterVideos('mens')">🌊 Règles</button>
-                    <button class="btn btn-ghost btn-sm" style="font-size:11px;" onclick="filterVideos('folliculaire')">🌱 Follic.</button>
-                    <button class="btn btn-ghost btn-sm" style="font-size:11px;" onclick="filterVideos('ovulation')">⚡ Ovul.</button>
-                    <button class="btn btn-ghost btn-sm" style="font-size:11px;" onclick="filterVideos('luteale')">🍂 Lutéale</button>
+                <div class="card">
+                    <div class="card-title">Nombre de pas 👟</div>
+                    <div id="pas-stats-block"></div>
                 </div>
-                <div id="video-instructor-filter" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;"></div>
-                <div id="videos-list"></div>
+                </div><!-- end sante-panel-stats -->
             </div>
 
         </div>
@@ -1841,34 +1908,13 @@
     <!-- Account overlay -->
     <div id="burger-overlay" onclick="closeBurger()"></div>
 
-    <!-- Sport sub-menu sheet -->
-    <div id="sport-sheet-overlay" onclick="closeSportSheet()" style="display:none;position:fixed;inset:0;z-index:150;background:rgba(61,44,38,.35);backdrop-filter:blur(3px);"></div>
-    <div id="sport-sheet" style="position:fixed;bottom:-300px;left:50%;transform:translateX(-50%);width:100%;max-width:430px;z-index:160;background:var(--bg2);border-radius:var(--radius) var(--radius) 0 0;border:1px solid var(--border2);border-bottom:none;padding:20px 28px calc(var(--safe-bottom)+28px);transition:bottom .3s cubic-bezier(.4,0,.2,1);box-shadow:0 -4px 24px rgba(61,44,38,.10);">
-        <div style="width:36px;height:4px;background:var(--border2);border-radius:2px;margin:0 auto 20px;"></div>
-        <div style="font-family:var(--font-display);font-size:19px;color:var(--text);margin-bottom:16px;padding-left:4px;">Sport</div>
-        <div style="display:flex;flex-direction:column;gap:6px;">
-            <button class="sport-sheet-item" onclick="goTo('seances');closeSportSheet();">
-                <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="1.8" fill="none"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 8h10M7 12h10M7 16h6"/></svg>
-                <div><div style="font-weight:600;font-size:14px;">Séances</div><div style="font-size:11px;color:var(--text2);margin-top:1px;">Crée et lance tes entraînements</div></div>
-            </button>
-            <button class="sport-sheet-item" onclick="goTo('videos');closeSportSheet();">
-                <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="1.8" fill="none"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
-                <div><div style="font-weight:600;font-size:14px;">Vidéos</div><div style="font-size:11px;color:var(--text2);margin-top:1px;">Séances YouTube liées à ton cycle</div></div>
-            </button>
-            <button class="sport-sheet-item" onclick="goTo('entrees');closeSportSheet();">
-                <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="1.8" fill="none"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                <div><div style="font-weight:600;font-size:14px;">Entrées</div><div style="font-size:11px;color:var(--text2);margin-top:1px;">Historique des séances réalisées</div></div>
-            </button>
-        </div>
-    </div>
-
     <!-- Bottom nav -->
     <nav id="nav">
         <button class="nav-btn active" data-nav="home" onclick="goTo('home')">
             <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
             <span>Accueil</span>
         </button>
-        <button class="nav-btn" data-nav="sport" onclick="toggleSportSheet()">
+        <button class="nav-btn" data-nav="sport" onclick="goTo('sport')">
             <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
             <span>Sport</span>
         </button>
@@ -1899,6 +1945,13 @@
         </div>
         <nav id="burger-nav" style="display:none;"></nav>
     </div>
+
+    <!-- Legacy IDs pour compat JS (cachés) -->
+    <div id="workouts-list" style="display:none;"></div>
+    <div id="videos-list" style="display:none;"></div>
+    <div id="entrees-list" style="display:none;"></div>
+    <div id="video-phase-filter" style="display:none;"></div>
+    <div id="video-instructor-filter" style="display:none;"></div>
 
     <div id="modal-overlay" onclick="closeModal(event)">
         <div id="modal-box">
@@ -1951,6 +2004,8 @@
             videos: DB.get('ff_videos', []),
             planning: DB.get('ff_planning', {}),
             periodHistory: DB.get('ff_period_history', []),
+            pas: DB.get('ff_pas', {}),
+            pasGoal: DB.get('ff_pas_goal', 10000),
         };
 
         let _currentUserId = null;
@@ -1982,6 +2037,8 @@
             DB.set('ff_videos', state.videos);
             DB.set('ff_planning', state.planning || {});
             DB.set('ff_period_history', state.periodHistory || []);
+            DB.set('ff_pas', state.pas || {});
+            DB.set('ff_pas_goal', state.pasGoal || 10000);
 
             if (!_currentUserId) return; // pas connecté, on s'arrête là
 
@@ -2002,6 +2059,8 @@
                         videos: state.videos,
                         planning: state.planning || {},
                         period_history: state.periodHistory || [],
+                        pas: state.pas || {},
+                        pas_goal: state.pasGoal || 10000,
                         updated_at: new Date().toISOString(),
                     }, {
                         onConflict: 'user_id'
@@ -2037,6 +2096,8 @@
                     state.videos = data.videos || [];
                     state.planning = data.planning || {};
                     state.periodHistory = data.period_history || [];
+                    state.pas = data.pas || {};
+                    state.pasGoal = data.pas_goal || 10000;
                     // Met à jour le cache local avec les données du serveur
                     DB.set('ff_workouts', state.workouts);
                     DB.set('ff_sessions', state.sessions);
@@ -2046,6 +2107,8 @@
                     DB.set('ff_videos', state.videos);
                     DB.set('ff_planning', state.planning);
                     DB.set('ff_period_history', state.periodHistory);
+                    DB.set('ff_pas', state.pas);
+                    DB.set('ff_pas_goal', state.pasGoal);
                 } else {
                 // Nouvel utilisateur : BDD vide, on ne pousse rien
                 // Le premier save() sera déclenché à la première action de l'utilisateur
@@ -2065,6 +2128,7 @@
             document.getElementById('tab-login').classList.toggle('active', tab === 'login');
             document.getElementById('tab-signup').classList.toggle('active', tab === 'signup');
             document.getElementById('auth-confirm-field').style.display = tab === 'signup' ? '' : 'none';
+            document.getElementById('auth-firstname-field').style.display = tab === 'signup' ? '' : 'none';
             document.getElementById('auth-submit-btn').textContent = tab === 'login' ? 'Se connecter' : 'Créer mon compte';
             document.getElementById('auth-footer-reset').style.display = tab === 'login' ? '' : 'none';
             document.getElementById('auth-error').classList.remove('show');
@@ -2099,7 +2163,8 @@
                     error
                 } = await sb.auth.signUp({
                     email,
-                    password
+                    password,
+                    options: { data: { firstname: document.getElementById('auth-firstname').value.trim() } }
                 });
                 if (error) {
                     showAuthError(error.message);
@@ -2154,7 +2219,10 @@
 
         async function onAuthSuccess(user){
           _currentUserId = user.id;
+          const firstname = user.user_metadata?.firstname || '';
+          if(firstname) DB.set('ff_firstname', firstname);
           document.getElementById('burger-user-email').textContent = user.email;
+          document.getElementById('burger-user-label').textContent = firstname ? `Bonjour ${firstname} 🌸` : 'Compte connecté';
           document.getElementById('auth-screen').classList.add('hidden');
           setSyncStatus('syncing');
 
@@ -2168,10 +2236,12 @@
             videos: [],
             planning: {},
             periodHistory: [],
+            pas: {},
+            pasGoal: 10000,
           };
           // Vide le localStorage
           ['ff_workouts','ff_sessions','ff_cycle','ff_logs',
-          'ff_health','ff_videos','ff_planning','ff_period_history']
+          'ff_health','ff_videos','ff_planning','ff_period_history','ff_pas','ff_pas_goal']
             .forEach(k => localStorage.removeItem(k));
 
           await loadFromSupabase(user.id);
@@ -2299,19 +2369,23 @@
             const screen = document.getElementById('screen-' + name);
             if (screen) screen.classList.add('active');
             if (name === 'home') renderHome();
-            if (name === 'seances') renderWorkouts();
+            if (name === 'seances') { goTo('sport'); switchSportTab('seances'); return; }
+            if (name === 'videos') { goTo('sport'); switchSportTab('videos'); return; }
+            if (name === 'entrees') { goTo('sport'); switchSportTab('entrees'); return; }
+            if (name === 'sport') renderSportScreen();
             if (name === 'cal') renderCalendar();
             if (name === 'stats') { goTo('sante'); switchSanteTab('stats'); return; }
             if (name === 'cycle') renderCycleScreen();
             if (name === 'sante') renderSanteScreen();
-            if (name === 'entrees') renderEntrees();
         }
 
         // ── Home ──
         function renderHome() {
             const now = new Date(),
                 h = now.getHours();
-            document.getElementById('home-greeting').textContent = (h < 12 ? 'Bonjour' : h < 18 ? 'Bon après-midi' : 'Bonsoir') + ' 👋';
+            const greetBase = h < 12 ? 'Bonjour' : h < 18 ? 'Bon après-midi' : 'Bonsoir';
+            const fn = DB.get('ff_firstname','');
+            document.getElementById('home-greeting').textContent = (fn ? greetBase + ' ' + fn : greetBase) + ' 👋';
             document.getElementById('home-date').textContent = now.toLocaleDateString('fr-FR', {
                 weekday: 'long',
                 day: 'numeric',
@@ -2397,6 +2471,19 @@
             document.getElementById('stat-week-min').textContent = ws.reduce((a, s) => a + (s.durationMin || 0), 0);
             document.getElementById('stat-week-exos').textContent = ws.reduce((a, s) => a + (s.logs ?.reduce((b, l) => b + (l.completedSets ?.length || 0), 0) || 0), 0);
             document.getElementById('stat-week-kcal').textContent = ws.reduce((a, s) => a + (s.kcal || 0), 0);
+            // Pas du jour
+            const todayPas = (state.pas||{})[todayStr()]||0;
+            const pasGoal = state.pasGoal||10000;
+            const homePasVal = document.getElementById('home-pas-val');
+            const homePasBar = document.getElementById('home-pas-bar');
+            const homePasLbl = document.getElementById('home-pas-lbl');
+            if(homePasVal) homePasVal.textContent = todayPas.toLocaleString('fr-FR');
+            if(homePasBar) homePasBar.style.width = Math.min(100,Math.round((todayPas/pasGoal)*100))+'%';
+            if(homePasLbl){
+                const pct = Math.round((todayPas/pasGoal)*100);
+                homePasLbl.textContent = todayPas>=pasGoal ? `✓ Objectif atteint (${pasGoal.toLocaleString('fr-FR')} pas) 🏆` : `${pct}% de l'objectif · ${pasGoal.toLocaleString('fr-FR')} pas`;
+                homePasLbl.style.color = todayPas>=pasGoal ? 'var(--menthe)' : 'var(--text3)';
+            }
         }
 
         // ── Workouts list ──
@@ -3379,41 +3466,311 @@ function saveVideo(){
 function toggleBurger(){document.getElementById("burger-overlay").classList.toggle("open");document.getElementById("burger-drawer").classList.toggle("open");}
 function closeBurger(){document.getElementById("burger-overlay").classList.remove("open");document.getElementById("burger-drawer").classList.remove("open");}
 
-// ── Sport sheet ──
-function toggleSportSheet(){
-  const sheet=document.getElementById('sport-sheet');
-  const overlay=document.getElementById('sport-sheet-overlay');
-  const isOpen=sheet.style.bottom==='0px';
-  if(isOpen){closeSportSheet();}else{
-    overlay.style.display='block';
-    sheet.style.bottom='0px';
-    // highlight sport nav btn
-    document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-    document.querySelector('.nav-btn[data-nav="sport"]').classList.add('active');
-  }
+// ── Sport screen (tabs) ──
+let _sportTab = 'seances';
+let _videoPhaseFilter2 = '', _videoInstructorFilter2 = '';
+
+function renderSportScreen(){
+  switchSportTab(_sportTab, true);
 }
-function closeSportSheet(){
-  document.getElementById('sport-sheet').style.bottom='-300px';
-  document.getElementById('sport-sheet-overlay').style.display='none';
-  // remove active from sport if no sport screen active
-  const active=document.querySelector('.screen.active');
-  const sportScreens=['seances','videos','entrees'];
-  if(!active||!sportScreens.includes(active.id.replace('screen-',''))){
-    document.querySelector('.nav-btn[data-nav="sport"]')?.classList.remove('active');
+
+function switchSportTab(tab, force){
+  if(_sportTab === tab && !force) return;
+  _sportTab = tab;
+  const panels = ['seances','videos','pas','entrees'];
+  panels.forEach(p => {
+    const el = document.getElementById('sport-panel-'+p);
+    const btn = document.getElementById('sport-tab-'+p);
+    if(!el || !btn) return;
+    const active = p === tab;
+    el.style.display = active ? '' : 'none';
+    btn.style.background = active ? 'var(--bg2)' : 'none';
+    btn.style.color = active ? 'var(--text)' : 'var(--text2)';
+    btn.style.boxShadow = active ? '0 1px 3px rgba(180,130,110,.1)' : 'none';
+  });
+  if(tab === 'seances') renderWorkouts2();
+  if(tab === 'videos') renderVideosScreen2();
+  if(tab === 'pas') renderPasScreen();
+  if(tab === 'entrees') renderEntrees2();
+}
+
+// ── Workouts in sport screen ──
+function renderWorkouts2(){
+  const el = document.getElementById('workouts-list2');
+  if(!el) return;
+  // Reuse same HTML logic as renderWorkouts but target workouts-list2
+  if(!state.workouts.length){
+    el.innerHTML=`<div class="card" style="text-align:center;color:var(--text2);">Aucune séance créée.<br>Crée ta première séance ! 🌸</div>`;
+    return;
+  }
+  el.innerHTML = state.workouts.map(w=>{
+    const phaseLabels = w.phases?.length ?
+      w.phases.map(p=>`<span class="pill ${PHASES[p]?.cls||''}" style="font-size:10px;">${PHASES[p]?.emoji||''} ${PHASES[p]?.label||''}</span>`).join('') :
+      w.phase ? `<span class="pill ${PHASES[w.phase]?.cls||''}">${PHASES[w.phase]?.emoji||''} ${PHASES[w.phase]?.label||''}</span>` : '';
+    return `<div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
+        <div style="font-size:15px;font-weight:600;">${escHtml(w.name)}</div>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-ghost btn-sm" onclick="editWorkout('${w.id}')" style="width:auto;padding:6px 10px;">✏️</button>
+          <button class="btn btn-ghost btn-sm" onclick="deleteWorkout('${w.id}')" style="color:var(--rouge);border-color:rgba(212,130,122,.25);width:auto;padding:6px 10px;">🗑</button>
+        </div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">${phaseLabels}</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:10px;">${w.exercises.length} exercices · ~${w.estimatedMin||'?'} min · <em>${w.mode==='circuit'?'Circuit':'Exercice par exercice'}</em></div>
+      <button class="btn btn-primary btn-sm" onclick="startWorkoutById('${w.id}')">▶ Démarrer</button>
+    </div>`;
+  }).join('');
+}
+
+function renderWorkouts(){
+  renderWorkouts2();
+}
+
+// ── Videos in sport screen ──
+function renderVideosScreen2(){
+  const el = document.getElementById('videos-list2');
+  if(!el) return;
+  const filtered = (state.videos||[]).filter(v=>{
+    if(_videoPhaseFilter2 && !(v.phases?.includes(_videoPhaseFilter2))) return false;
+    if(_videoInstructorFilter2 && v.instructor !== _videoInstructorFilter2) return false;
+    return true;
+  });
+  // instructor filter buttons
+  const instEl = document.getElementById('video-instructor-filter2');
+  if(instEl){
+    const insts=[...new Set((state.videos||[]).map(v=>v.instructor).filter(Boolean))];
+    instEl.innerHTML = insts.length ? `<button class="btn btn-ghost btn-sm" style="font-size:11px;${!_videoInstructorFilter2?'background:var(--rose-lt);color:var(--rose);border-color:var(--rose);':''}" onclick="filterInstructor2('')">Tous</button>`
+      +insts.map(ins=>`<button class="btn btn-ghost btn-sm" style="font-size:11px;${_videoInstructorFilter2===ins?'background:var(--rose-lt);color:var(--rose);border-color:var(--rose);':''}" onclick="filterInstructor2('${escHtml(ins)}')">${escHtml(ins)}</button>`).join('') : '';
+  }
+  if(!filtered.length){el.innerHTML=`<div class="card" style="text-align:center;color:var(--text2);">Aucune vidéo${_videoPhaseFilter2?' pour cette phase':''}. Ajoute-en une ! 🎬</div>`;return;}
+  el.innerHTML = filtered.map(v=>{
+    const phasePills = v.phases?.length ? `<div class="yt-phases-row">${v.phases.map(p=>`<span class="pill ${PHASES[p]?.cls||'pill-neutre'}" style="font-size:10px;">${PHASES[p]?.emoji||''} ${PHASES[p]?.label||p}</span>`).join('')}</div>` : '';
+    const doneBadge = v.done ? `<span class="yt-done-badge">✓ Fait le ${formatDate(v.doneDate||'')}</span>` : '';
+    const kcalBadge = v.done && v.kcal ? `<span class="pill pill-neutre" style="font-size:10px;">🔥 ${v.kcal} kcal</span>` : '';
+    const minBadge = v.minutes ? `<span class="pill pill-neutre" style="font-size:10px;">⏱ ${v.minutes} min</span>` : '';
+    return `<div class="yt-card${v.done?' done':''}">
+      ${v.videoId?`<div class="yt-thumbnail-container" onclick="openYtVideo('${escHtml(v.url)}')"><img class="yt-thumbnail" src="${ytThumb(v.videoId)}" alt="${escHtml(v.name)}" loading="lazy"/><div class="yt-play-btn"><div class="yt-play-icon"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg></div></div></div>`:''}
+      <div class="yt-card-body">
+        ${phasePills}
+        <div class="yt-card-title">${escHtml(v.name)}</div>
+        <div class="yt-card-meta">${v.instructor?escHtml(v.instructor)+' · ':''}<span class="yt-badge">▶ YouTube</span></div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">${minBadge}${doneBadge}${kcalBadge}</div>
+        <div class="yt-card-actions">
+          <button class="btn btn-ghost btn-sm" style="flex:1;" onclick="markVideoDone('${v.id}')">${v.done?'↩ Refaire':'✓ Marquer faite'}</button>
+          <button class="btn btn-ghost btn-sm" onclick="editVideo('${v.id}')" style="width:auto;padding:8px 12px;">✏️</button>
+          <button class="btn btn-ghost btn-sm" onclick="deleteVideo('${v.id}')" style="color:var(--rouge);border-color:rgba(212,130,122,.25);width:auto;padding:8px 12px;">🗑</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderVideosScreen(){
+  renderVideosScreen2();
+  // also update old screen if visible
+  const oldEl = document.getElementById('videos-list');
+  if(oldEl) oldEl.innerHTML = document.getElementById('videos-list2')?.innerHTML || '';
+}
+
+function filterVideos2(phase){
+  _videoPhaseFilter2=phase;
+  document.querySelectorAll('#video-phase-filter2 button').forEach(b=>b.classList.remove('active'));
+  event?.target?.classList.add('active');
+  renderVideosScreen2();
+}
+function filterInstructor2(ins){_videoInstructorFilter2=ins;renderVideosScreen2();}
+
+// ── Entrées in sport screen ──
+function renderEntrees2(){
+  const el=document.getElementById('entrees-list2');if(!el)return;
+  const sorted=[...state.sessions].sort((a,b)=>b.date.localeCompare(a.date));
+  if(!sorted.length){el.innerHTML=`<div class="card" style="text-align:center;color:var(--text2);">Aucune séance enregistrée encore.</div>`;return;}
+  el.innerHTML=sorted.map(s=>{
+    const ph=s.phase?PHASES[s.phase]:null;
+    const sets=s.logs?.reduce((a,l)=>a+(l.completedSets?.length||0),0)||0;
+    return`<div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
+        <div>
+          <div style="font-size:15px;font-weight:600;">${escHtml(s.workoutName)}</div>
+          <div style="font-size:12px;color:var(--text2);margin-top:2px;">${formatDate(s.date)}${ph?' · <span class="pill '+ph.cls+'" style="font-size:9px;padding:2px 7px;">'+ph.emoji+' '+ph.label+'</span>':''}</div>
+        </div>
+        ${s.isVideo?'<span class="yt-badge">▶ YouTube</span>':''}
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+        <span class="pill pill-neutre" style="font-size:10px;">⏱ ${s.durationMin||0} min</span>
+        ${sets?`<span class="pill pill-neutre" style="font-size:10px;">💪 ${sets} sets</span>`:''}
+        ${s.kcal?`<span class="pill pill-neutre" style="font-size:10px;">🔥 ${s.kcal} kcal</span>`:''}
+        ${s.rpe?`<span class="pill pill-neutre" style="font-size:10px;">RPE ${s.rpe}/10</span>`:''}
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-ghost btn-sm" style="flex:1" onclick="editSessionEntry('${s.id}')">✏️ Modifier</button>
+        <button class="btn btn-ghost btn-sm" style="flex:1;color:var(--rouge);border-color:rgba(212,130,122,.25);" onclick="deleteSessionEntry('${s.id}')">🗑 Supprimer</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function renderEntrees(){ renderEntrees2(); }
+
+// ── Nombre de pas ──
+function renderPasScreen(){
+  const today = todayStr();
+  const pasData = state.pas || {};
+  const goal = state.pasGoal || 10000;
+  const todayPas = pasData[today] || 0;
+  const el = document.getElementById('pas-today-val');
+  if(el) el.textContent = todayPas.toLocaleString('fr-FR');
+  const bar = document.getElementById('pas-goal-bar');
+  if(bar) bar.style.width = Math.min(100, Math.round((todayPas/goal)*100))+'%';
+  const lbl = document.getElementById('pas-goal-label');
+  if(lbl){
+    const pct = Math.round((todayPas/goal)*100);
+    lbl.textContent = `Objectif : ${goal.toLocaleString('fr-FR')} pas${todayPas>=goal?' ✓ Atteint !':' ('+pct+'%)'}`;
+    lbl.style.color = todayPas>=goal ? 'var(--menthe)' : 'var(--text3)';
+  }
+  const input = document.getElementById('pas-input');
+  if(input && todayPas) input.value = todayPas;
+  const goalInput = document.getElementById('pas-goal-input');
+  if(goalInput) goalInput.value = goal;
+  renderPasChart();
+  renderPasHistory();
+}
+
+function savePasToday(){
+  const val = parseInt(document.getElementById('pas-input')?.value)||0;
+  if(val<0){showToast('❌ Nombre de pas invalide');return;}
+  if(!state.pas) state.pas={};
+  state.pas[todayStr()] = val;
+  save();
+  renderPasScreen();
+  showToast(val >= (state.pasGoal||10000) ? '🎉 Objectif atteint !' : '👟 Pas enregistrés !');
+}
+
+function savePasGoal(){
+  const val = parseInt(document.getElementById('pas-goal-input')?.value)||10000;
+  if(val<100){showToast('❌ Objectif trop bas');return;}
+  state.pasGoal = val;
+  save();
+  renderPasScreen();
+  showToast('✅ Objectif mis à jour !');
+}
+
+function renderPasChart(){
+  const el = document.getElementById('pas-week-chart');
+  if(!el) return;
+  const goal = state.pasGoal||10000;
+  const pas = state.pas||{};
+  const days = Array.from({length:7},(_,i)=>{const d=new Date();d.setDate(d.getDate()-(6-i));return d.toISOString().slice(0,10);});
+  const maxVal = Math.max(goal, ...days.map(d=>pas[d]||0));
+  el.innerHTML = days.map(d=>{
+    const v = pas[d]||0;
+    const h = Math.round((v/maxVal)*78)+4;
+    const reached = v >= goal;
+    const label = new Date(d+'T12:00:00').toLocaleDateString('fr-FR',{weekday:'short'}).slice(0,2);
+    return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+      <div style="font-size:9px;color:${reached?'var(--menthe)':'var(--text3)'};">${v?v.toLocaleString('fr-FR'):''}</div>
+      <div style="width:100%;height:${h}px;background:${v?(reached?'var(--menthe)':'var(--rose)'):'var(--bg3)'};border-radius:4px 4px 0 0;"></div>
+      <div style="font-size:10px;color:var(--text3);">${label}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderPasHistory(){
+  const el = document.getElementById('pas-history-list');
+  if(!el) return;
+  const pas = state.pas||{};
+  const goal = state.pasGoal||10000;
+  const entries = Object.entries(pas).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,14);
+  if(!entries.length){el.innerHTML=`<div style="color:var(--text3);font-size:13px;">Aucune donnée encore. Commence à tracker ! 👟</div>`;return;}
+  el.innerHTML = entries.map(([date,val])=>{
+    const reached = val>=goal;
+    return`<div class="health-history-row">
+      <div>
+        <div style="font-size:14px;font-weight:500;">${formatDate(date)}</div>
+        <div style="font-size:11px;color:var(--text3);">${reached?'✓ Objectif atteint':Math.round((val/goal)*100)+'% de l\'objectif'}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <div style="font-family:var(--font-display);font-size:18px;color:${reached?'var(--menthe)':'var(--text)'};">${val.toLocaleString('fr-FR')}</div>
+        <div style="font-size:11px;color:var(--text3);">pas</div>
+        ${reached?`<span style="font-size:14px;">🏆</span>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Video finish : minutes réelles ──
+// Override confirmVideoDone to ask for real minutes
+function markVideoDone(id){
+  const v=state.videos.find(x=>x.id===id);if(!v)return;
+  if(!v.done){
+    openModal('🔥 Séance terminée !',`
+      <div style="text-align:center;margin-bottom:16px;font-size:16px;">Super ! Tu as terminé :<br><strong>${escHtml(v.name)}</strong></div>
+      <div class="kcal-row" style="margin-bottom:14px;">
+        <div class="kcal-icon">⏱</div>
+        <input type="number" id="vid-finish-min" min="0" max="300" placeholder="${v.minutes||0}" inputmode="numeric" style="font-family:var(--font-display);font-size:20px;flex:1;text-align:center;background:none;border:none;"/>
+        <div class="kcal-lbl">minutes réelles</div>
+      </div>
+      <div class="kcal-row">
+        <div class="kcal-icon">🔥</div>
+        <input type="number" id="vid-finish-kcal" min="0" max="5000" placeholder="0" inputmode="numeric"/>
+        <div class="kcal-lbl">kcal brûlées</div>
+      </div>
+      <button class="btn btn-primary" onclick="confirmVideoDone('${id}')">✓ Confirmer</button>
+      <button class="btn btn-ghost" style="margin-top:8px" onclick="confirmVideoDone('${id}',true)">Passer sans détails</button>`);
+  } else {
+    v.done=false;v.kcal=0;v.doneDate=null;v.realMinutes=null;
+    save();renderVideosScreen();showToast('↩ Marquée à refaire');
   }
 }
 
+function confirmVideoDone(id,skip=false){
+  const v=state.videos.find(x=>x.id===id);if(!v)return;
+  const kcal=skip?0:(parseInt(document.getElementById('vid-finish-kcal')?.value)||0);
+  const realMin=skip?null:(parseInt(document.getElementById('vid-finish-min')?.value)||null);
+  v.done=true;v.kcal=kcal;v.doneDate=todayStr();if(realMin!==null)v.realMinutes=realMin;
+  const durationMin = realMin!==null ? realMin : (v.minutes||v.durationMinutes||0);
+  state.sessions.push({id:Date.now().toString(),workoutId:v.id,workoutName:v.name,date:todayStr(),phase:getPhaseForDate(todayStr())||'',mode:'youtube',durationMin,logs:[],rpe:0,mood:0,kcal,isVideo:true});
+  save();closeModal();renderVideosScreen();showToast('🎉 Vidéo marquée comme faite !');
+}
+
+// ── Pas stats in stats panel ──
+function renderPasStats(){
+  const el = document.getElementById('pas-stats-block');
+  if(!el) return;
+  const pas = state.pas||{};
+  const goal = state.pasGoal||10000;
+  const entries = Object.entries(pas);
+  if(!entries.length){el.innerHTML=`<div style="color:var(--text3);font-size:13px;">Aucune donnée de pas encore.</div>`;return;}
+  const total = entries.reduce((a,[,v])=>a+v,0);
+  const avg = Math.round(total/entries.length);
+  const best = Math.max(...entries.map(([,v])=>v));
+  const daysGoal = entries.filter(([,v])=>v>=goal).length;
+  el.innerHTML = `<div class="metrics" style="grid-template-columns:1fr 1fr;margin-bottom:0;">
+    <div class="metric"><div class="metric-val">${avg.toLocaleString('fr-FR')}</div><div class="metric-lbl">Moy. / jour</div></div>
+    <div class="metric"><div class="metric-val">${best.toLocaleString('fr-FR')}</div><div class="metric-lbl">Record</div></div>
+    <div class="metric"><div class="metric-val">${daysGoal}</div><div class="metric-lbl">Jours objectif ✓</div></div>
+    <div class="metric"><div class="metric-val">${entries.length}</div><div class="metric-lbl">Jours trackés</div></div>
+  </div>`;
+}
+
+// ── Override renderStats to include pas ──
+const _origRenderStats = renderStats;
+renderStats = function(){
+  _origRenderStats();
+  renderPasStats();
+};
+
+// ── Sport sheet (kept for backward compat but hidden) ──
+function toggleSportSheet(){ goTo('sport'); }
+function closeSportSheet(){}
+
+
 // Patch goTo to update bottom nav active state
 const _origGoTo=goTo;
-const NAV_MAP={home:'home',seances:'sport',videos:'sport',entrees:'sport',sante:'sante',stats:'sante',cal:'cal',cycle:'cycle'};
+const NAV_MAP={home:'home',sport:'sport',seances:'sport',videos:'sport',entrees:'sport',sante:'sante',stats:'sante',cal:'cal',cycle:'cycle'};
 goTo = function(id){
   _origGoTo(id);
   const navKey=NAV_MAP[id]||id;
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.nav===navKey));
-  // also keep sport btn active for sport sub-screens
-  if(['seances','videos','entrees'].includes(id)){
-    document.querySelector('.nav-btn[data-nav="sport"]')?.classList.add('active');
-  }
 };
 
 // ── PWA + Init ──
