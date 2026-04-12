@@ -1742,13 +1742,15 @@
                 <div id="sport-panel-videos" style="display:none;">
                     <div class="section-sub">Séances YouTube liées à ton cycle</div>
                     <button class="btn btn-primary" onclick="openAddVideo()" style="margin-bottom:16px;">+ Ajouter une vidéo</button>
-                    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;" id="video-phase-filter2">
-                        <button class="btn btn-ghost btn-sm" style="font-size:11px;" onclick="filterVideos2('')">Toutes</button>
-                        <button class="btn btn-ghost btn-sm" style="font-size:11px;" onclick="filterVideos2('mens')">🌊 Règles</button>
-                        <button class="btn btn-ghost btn-sm" style="font-size:11px;" onclick="filterVideos2('folliculaire')">🌱 Follic.</button>
-                        <button class="btn btn-ghost btn-sm" style="font-size:11px;" onclick="filterVideos2('ovulation')">⚡ Ovul.</button>
-                        <button class="btn btn-ghost btn-sm" style="font-size:11px;" onclick="filterVideos2('luteale')">🍂 Lutéale</button>
-                    </div>
+                    <div style="margin-bottom:12px;" id="video-phase-filter2">
+                      <button class="btn btn-ghost btn-sm" style="font-size:11px;width:100%;margin-bottom:6px;" onclick="filterVideos2('')">Toutes</button>
+                      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+                          <button class="btn btn-ghost btn-sm" style="font-size:11px;" onclick="filterVideos2('mens')">🌊 Règles</button>
+                          <button class="btn btn-ghost btn-sm" style="font-size:11px;" onclick="filterVideos2('folliculaire')">🌱 Follic.</button>
+                          <button class="btn btn-ghost btn-sm" style="font-size:11px;" onclick="filterVideos2('ovulation')">⚡ Ovul.</button>
+                          <button class="btn btn-ghost btn-sm" style="font-size:11px;" onclick="filterVideos2('luteale')">🍂 Lutéale</button>
+                      </div>
+                  </div>
                     <div id="video-instructor-filter2" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;"></div>
                     <div id="videos-list2"></div>
                 </div>
@@ -3539,8 +3541,22 @@ function renderVideosScreen2(){
   const instEl = document.getElementById('video-instructor-filter2');
   if(instEl){
     const insts=[...new Set((state.videos||[]).map(v=>v.instructor).filter(Boolean))];
-    instEl.innerHTML = insts.length ? `<button class="btn btn-ghost btn-sm" style="font-size:11px;${!_videoInstructorFilter2?'background:var(--rose-lt);color:var(--rose);border-color:var(--rose);':''}" onclick="filterInstructor2('')">Tous</button>`
-      +insts.map(ins=>`<button class="btn btn-ghost btn-sm" style="font-size:11px;${_videoInstructorFilter2===ins?'background:var(--rose-lt);color:var(--rose);border-color:var(--rose);':''}" onclick="filterInstructor2('${escHtml(ins)}')">${escHtml(ins)}</button>`).join('') : '';
+    instEl.style.display = 'flex';
+instEl.style.gap = '12px';
+instEl.style.flexWrap = 'wrap';
+instEl.style.justifyContent = 'flex-start';
+instEl.style.marginBottom = '12px';
+
+instEl.innerHTML = insts.length ? 
+  [`<div onclick="filterInstructor2('')" style="display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;">
+    <div style="width:40px;height:40px;border-radius:50%;background:${!_videoInstructorFilter2?'var(--rose)':'var(--bg3)'};display:flex;align-items:center;justify-content:center;font-size:20px;border:2px solid ${!_videoInstructorFilter2?'var(--rose)':'var(--border2)'};">👥</div>
+    <span style="font-size:10px;font-weight:600;color:${!_videoInstructorFilter2?'var(--rose)':'var(--text2)'};">Tous</span>
+  </div>`]
+  .concat(insts.map(ins=>`
+    <div onclick="filterInstructor2('${escHtml(ins)}')" style="display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;">
+      <div style="width:40px;height:40px;border-radius:50%;background:${_videoInstructorFilter2===ins?'var(--rose)':'var(--bg3)'};display:flex;align-items:center;justify-content:center;font-size:20px;border:2px solid ${_videoInstructorFilter2===ins?'var(--rose)':'var(--border2)'};">👤</div>
+      <span style="font-size:10px;font-weight:600;color:${_videoInstructorFilter2===ins?'var(--rose)':'var(--text2)'};text-align:center;max-width:56px;line-height:1.2;">${escHtml(ins.split(' ')[0])}</span>
+    </div>`)).join('') : '';
   }
   if(!filtered.length){el.innerHTML=`<div class="card" style="text-align:center;color:var(--text2);">Aucune vidéo${_videoPhaseFilter2?' pour cette phase':''}. Ajoute-en une ! 🎬</div>`;return;}
   el.innerHTML = filtered.map(v=>{
