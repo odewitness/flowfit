@@ -1030,13 +1030,6 @@
             margin-bottom: 8px;
         }
         
-        .yt-phases-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 4px;
-            margin-bottom: 10px;
-        }
-        
         .yt-card-actions {
             display: flex;
             gap: 8px;
@@ -1489,6 +1482,54 @@
             fill: none;
             flex-shrink: 0;
         }
+        /* ── Sport sheet items ── */
+        .sport-sheet-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 16px;
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all .18s;
+            text-align: left;
+            width: 100%;
+            color: var(--text);
+        }
+        .sport-sheet-item:hover, .sport-sheet-item:active {
+            background: var(--bg4);
+        }
+        .sport-sheet-item svg {
+            flex-shrink: 0;
+            color: var(--rose);
+        }
+        /* ── Video phases grid 2x2 ── */
+        .yt-phases-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+        .yt-phases-row .pill {
+            justify-content: center;
+            text-align: center;
+        }
+        /* ── Modal more breathing room ── */
+        #modal-box {
+            padding: 20px 22px calc(var(--safe-bottom)+24px);
+        }
+        #modal-box .field input,
+        #modal-box .field select,
+        #modal-box .field textarea {
+            padding: 13px 16px;
+        }
+        /* ── New workout / video form padding ── */
+        .wf-section {
+            padding: 18px 18px;
+        }
+        /* ── Burger btn hidden (no longer needed in topbar) ── */
+        #burger-btn { display: none !important; }
     </style>
 </head>
 
@@ -1516,7 +1557,7 @@
     <div id="app">
         <div id="topbar">
             <div id="topbar-title">FlowFit 🌸</div>
-            <div style="display:flex;align-items:center;gap:8px;"><span id="sync-indicator" class="saved">✓</span><span id="topbar-phase" class="pill pill-neutre" onclick="openCycleQuick()">— cycle</span><button onclick="toggleBurger()" id="burger-btn" aria-label="Menu"><span></span><span></span><span></span></button></div>
+            <div style="display:flex;align-items:center;gap:8px;"><span id="sync-indicator" class="saved">✓</span><span id="topbar-phase" class="pill pill-neutre" onclick="openCycleQuick()">— cycle</span></div>
         </div>
         <div id="screens">
 
@@ -1596,57 +1637,6 @@
                 </div>
             </div>
 
-            <!-- STATS -->
-            <div id="screen-stats" class="screen">
-                <div class="section-title">Statistiques</div>
-                <div class="section-sub">Tes progrès en un coup d'œil</div>
-                <div class="card">
-                    <div class="card-title">Total global</div>
-                    <div class="metrics" style="grid-template-columns:1fr 1fr;">
-                        <div class="metric">
-                            <div class="metric-val" id="stat-total-sessions">0</div>
-                            <div class="metric-lbl">Séances</div>
-                        </div>
-                        <div class="metric">
-                            <div class="metric-val" id="stat-total-min">0</div>
-                            <div class="metric-lbl">Minutes</div>
-                        </div>
-                        <div class="metric">
-                            <div class="metric-val" id="stat-total-exos">0</div>
-                            <div class="metric-lbl">Sets</div>
-                        </div>
-                        <div class="metric">
-                            <div class="metric-val" id="stat-total-kcal">0</div>
-                            <div class="metric-lbl">kcal 🔥</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="card">
-                    <div class="card-title">Activité par phase</div>
-                    <div style="display:flex;gap:4px;align-items:flex-end;height:88px;" id="phase-chart"></div>
-                    <div style="display:flex;gap:4px;margin-top:6px;" id="phase-chart-labels"></div>
-                </div>
-                <div class="card">
-                    <div class="card-title">7 derniers jours</div>
-                    <div style="display:flex;align-items:flex-end;gap:4px;height:80px;" id="week-chart"></div>
-                </div>
-                <div class="card">
-                    <div class="card-title">Humeur par phase</div>
-                    <div id="mood-by-phase"></div>
-                </div>
-                <div class="card">
-                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-                        <div class="card-title" style="margin-bottom:0">Stats par exercice</div>
-                        <input id="exo-filter" placeholder="Filtrer…" style="padding:5px 10px;background:var(--bg3);border:1px solid var(--border2);border-radius:20px;font-size:12px;width:110px;color:var(--text);" oninput="renderExoStats()" />
-                    </div>
-                    <div id="exo-stats-list"></div>
-                </div>
-                <div class="card">
-                    <div class="card-title">Stats vidéos 🎬</div>
-                    <div id="video-stats-list"></div>
-                </div>
-            </div>
-
             <!-- CYCLE -->
             <div id="screen-cycle" class="screen">
                 <div class="section-title">Mon cycle</div>
@@ -1717,6 +1707,14 @@
             <!-- SANTÉ -->
             <div id="screen-sante" class="screen">
                 <div class="section-title">Santé</div>
+                <!-- Sub-tabs -->
+                <div style="display:flex;gap:6px;margin-bottom:16px;background:var(--bg3);border-radius:var(--radius-sm);padding:4px;">
+                    <button class="sante-tab active" id="sante-tab-sante" onclick="switchSanteTab('sante')" style="flex:1;padding:9px 8px;border-radius:var(--radius-xs);border:none;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;background:var(--bg2);color:var(--text);box-shadow:0 1px 3px rgba(180,130,110,.1);">💪 Suivi corps</button>
+                    <button class="sante-tab" id="sante-tab-stats" onclick="switchSanteTab('stats')" style="flex:1;padding:9px 8px;border-radius:var(--radius-xs);border:none;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;background:none;color:var(--text2);">📊 Stats</button>
+                </div>
+
+                <!-- Panel Santé -->
+                <div id="sante-panel-sante">
                 <div class="section-sub">Suivi corporel & bien-être physique</div>
 
                 <!-- Quick entry -->
@@ -1762,6 +1760,45 @@
                     <div class="card-title">Mensurations</div>
                     <div id="health-meas-list"></div>
                 </div>
+                </div><!-- end sante-panel-sante -->
+
+                <!-- Panel Stats -->
+                <div id="sante-panel-stats" style="display:none;">
+                <div class="section-sub">Tes progrès en un coup d'œil</div>
+                <div class="card">
+                    <div class="card-title">Total global</div>
+                    <div class="metrics" style="grid-template-columns:1fr 1fr;">
+                        <div class="metric"><div class="metric-val" id="stat-total-sessions">0</div><div class="metric-lbl">Séances</div></div>
+                        <div class="metric"><div class="metric-val" id="stat-total-min">0</div><div class="metric-lbl">Minutes</div></div>
+                        <div class="metric"><div class="metric-val" id="stat-total-exos">0</div><div class="metric-lbl">Sets</div></div>
+                        <div class="metric"><div class="metric-val" id="stat-total-kcal">0</div><div class="metric-lbl">kcal 🔥</div></div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title">Activité par phase</div>
+                    <div style="display:flex;gap:4px;align-items:flex-end;height:88px;" id="phase-chart"></div>
+                    <div style="display:flex;gap:4px;margin-top:6px;" id="phase-chart-labels"></div>
+                </div>
+                <div class="card">
+                    <div class="card-title">7 derniers jours</div>
+                    <div style="display:flex;align-items:flex-end;gap:4px;height:80px;" id="week-chart"></div>
+                </div>
+                <div class="card">
+                    <div class="card-title">Humeur par phase</div>
+                    <div id="mood-by-phase"></div>
+                </div>
+                <div class="card">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                        <div class="card-title" style="margin-bottom:0">Stats par exercice</div>
+                        <input id="exo-filter" placeholder="Filtrer…" style="padding:5px 10px;background:var(--bg3);border:1px solid var(--border2);border-radius:20px;font-size:12px;width:110px;color:var(--text);" oninput="renderExoStats()" />
+                    </div>
+                    <div id="exo-stats-list"></div>
+                </div>
+                <div class="card">
+                    <div class="card-title">Stats vidéos 🎬</div>
+                    <div id="video-stats-list"></div>
+                </div>
+                </div><!-- end sante-panel-stats -->
             </div>
 
             <!-- VIDÉOS -->
@@ -1783,15 +1820,55 @@
         </div>
     </div>
 
-    <!-- Burger button -->
-    <button id="burger-btn" onclick="toggleBurger()" aria-label="Menu">
-  <span></span><span></span><span></span>
-</button>
-
-    <!-- Burger overlay -->
+    <!-- Account overlay -->
     <div id="burger-overlay" onclick="closeBurger()"></div>
 
-    <!-- Burger drawer -->
+    <!-- Sport sub-menu sheet -->
+    <div id="sport-sheet-overlay" onclick="closeSportSheet()" style="display:none;position:fixed;inset:0;z-index:150;background:rgba(61,44,38,.35);backdrop-filter:blur(3px);"></div>
+    <div id="sport-sheet" style="position:fixed;bottom:-300px;left:50%;transform:translateX(-50%);width:100%;max-width:430px;z-index:160;background:var(--bg2);border-radius:var(--radius) var(--radius) 0 0;border:1px solid var(--border2);border-bottom:none;padding:16px 20px calc(var(--safe-bottom)+20px);transition:bottom .3s cubic-bezier(.4,0,.2,1);box-shadow:0 -4px 24px rgba(61,44,38,.10);">
+        <div style="width:36px;height:4px;background:var(--border2);border-radius:2px;margin:0 auto 20px;"></div>
+        <div style="font-family:var(--font-display);font-size:19px;color:var(--text);margin-bottom:16px;">Sport</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+            <button class="sport-sheet-item" onclick="goTo('seances');closeSportSheet();">
+                <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="1.8" fill="none"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 8h10M7 12h10M7 16h6"/></svg>
+                <div><div style="font-weight:600;font-size:14px;">Séances</div><div style="font-size:11px;color:var(--text2);margin-top:1px;">Crée et lance tes entraînements</div></div>
+            </button>
+            <button class="sport-sheet-item" onclick="goTo('videos');closeSportSheet();">
+                <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="1.8" fill="none"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+                <div><div style="font-weight:600;font-size:14px;">Vidéos</div><div style="font-size:11px;color:var(--text2);margin-top:1px;">Séances YouTube liées à ton cycle</div></div>
+            </button>
+            <button class="sport-sheet-item" onclick="goTo('entrees');closeSportSheet();">
+                <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="1.8" fill="none"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                <div><div style="font-weight:600;font-size:14px;">Entrées</div><div style="font-size:11px;color:var(--text2);margin-top:1px;">Historique des séances réalisées</div></div>
+            </button>
+        </div>
+    </div>
+
+    <!-- Bottom nav -->
+    <nav id="nav">
+        <button class="nav-btn active" data-nav="home" onclick="goTo('home')">
+            <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            <span>Accueil</span>
+        </button>
+        <button class="nav-btn" data-nav="sport" onclick="toggleSportSheet()">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+            <span>Sport</span>
+        </button>
+        <button class="nav-btn" data-nav="sante" onclick="goTo('sante')">
+            <svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+            <span>Santé</span>
+        </button>
+        <button class="nav-btn" data-nav="cal" onclick="goTo('cal')">
+            <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <span>Calendrier</span>
+        </button>
+        <button class="nav-btn" data-nav="cycle" onclick="goTo('cycle')">
+            <svg viewBox="0 0 24 24"><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/><path d="M12 6v6l4 2"/></svg>
+            <span>Cycle</span>
+        </button>
+    </nav>
+
+    <!-- Account drawer (connexion / déconnexion) -->
     <div id="burger-drawer">
         <div id="burger-header">
             <span style="font-family:var(--font-display);font-size:20px;color:var(--rose);">FlowFit 🌸</span>
@@ -1802,40 +1879,7 @@
             <div id="burger-user-label">Compte connecté</div>
             <button class="btn btn-ghost btn-sm" style="margin-top:10px;color:var(--rouge);border-color:rgba(212,130,122,.25);font-size:12px;" onclick="handleLogout()">🚪 Se déconnecter</button>
         </div>
-        <nav id="burger-nav">
-            <button class="burger-item active" data-screen="home" onclick="goTo('home');closeBurger()">
-      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-      <span>Accueil</span>
-    </button>
-            <button class="burger-item" data-screen="seances" onclick="goTo('seances');closeBurger()">
-      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-      <span>Séances</span>
-    </button>
-            <button class="burger-item" data-screen="videos" onclick="goTo('videos');closeBurger()">
-      <svg viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
-      <span>Vidéos</span>
-    </button>
-            <button class="burger-item" data-screen="entrees" onclick="goTo('entrees');closeBurger()">
-      <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-      <span>Entrées</span>
-    </button>
-            <button class="burger-item" data-screen="sante" onclick="goTo('sante');closeBurger()">
-      <svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-      <span>Santé</span>
-    </button>
-            <button class="burger-item" data-screen="cal" onclick="goTo('cal');closeBurger()">
-      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-      <span>Calendrier</span>
-    </button>
-            <button class="burger-item" data-screen="stats" onclick="goTo('stats');closeBurger()">
-      <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-      <span>Statistiques</span>
-    </button>
-            <button class="burger-item" data-screen="cycle" onclick="goTo('cycle');closeBurger()">
-      <svg viewBox="0 0 24 24"><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/><path d="M12 6v6l4 2"/></svg>
-      <span>Mon Cycle</span>
-    </button>
-        </nav>
+        <nav id="burger-nav" style="display:none;"></nav>
     </div>
 
     <div id="modal-overlay" onclick="closeModal(event)">
@@ -2234,12 +2278,12 @@
         function goTo(name) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('screen-' + name).classList.add('active');
-            document.querySelector(`[data-screen="${name}"]`).classList.add('active');
+            const screen = document.getElementById('screen-' + name);
+            if (screen) screen.classList.add('active');
             if (name === 'home') renderHome();
             if (name === 'seances') renderWorkouts();
             if (name === 'cal') renderCalendar();
-            if (name === 'stats') renderStats();
+            if (name === 'stats') { goTo('sante'); switchSanteTab('stats'); return; }
             if (name === 'cycle') renderCycleScreen();
             if (name === 'sante') renderSanteScreen();
             if (name === 'entrees') renderEntrees();
@@ -2753,6 +2797,21 @@ function calNext(){calDate=new Date(calDate.getFullYear(),calDate.getMonth()+1,1
 function calToday(){calDate=new Date();renderCalendar();}
 
 // ── Stats ──
+function switchSanteTab(tab){
+  document.getElementById('sante-panel-sante').style.display = tab==='sante' ? '' : 'none';
+  document.getElementById('sante-panel-stats').style.display = tab==='stats' ? '' : 'none';
+  const tSante = document.getElementById('sante-tab-sante');
+  const tStats = document.getElementById('sante-tab-stats');
+  if(tSante && tStats){
+    tSante.style.background = tab==='sante' ? 'var(--bg2)' : 'none';
+    tSante.style.color = tab==='sante' ? 'var(--text)' : 'var(--text2)';
+    tSante.style.boxShadow = tab==='sante' ? '0 1px 3px rgba(180,130,110,.1)' : 'none';
+    tStats.style.background = tab==='stats' ? 'var(--bg2)' : 'none';
+    tStats.style.color = tab==='stats' ? 'var(--text)' : 'var(--text2)';
+    tStats.style.boxShadow = tab==='stats' ? '0 1px 3px rgba(180,130,110,.1)' : 'none';
+  }
+  if(tab==='stats') renderStats();
+}
 function renderStats(){
   const S=state.sessions;
   document.getElementById('stat-total-sessions').textContent=S.length;
@@ -3297,13 +3356,47 @@ function saveVideo(){
   save();closeModal();renderVideosScreen();showToast('✅ Vidéo ajoutée !');
 }
 
-// ── Burger menu ──
-function toggleBurger(){document.getElementById("burger-btn").classList.toggle("open");document.getElementById("burger-overlay").classList.toggle("open");document.getElementById("burger-drawer").classList.toggle("open");}
-function closeBurger(){document.getElementById("burger-btn").classList.remove("open");document.getElementById("burger-overlay").classList.remove("open");document.getElementById("burger-drawer").classList.remove("open");}
 
-// Patch goTo to update burger active state
+// ── Account drawer ──
+function toggleBurger(){document.getElementById("burger-overlay").classList.toggle("open");document.getElementById("burger-drawer").classList.toggle("open");}
+function closeBurger(){document.getElementById("burger-overlay").classList.remove("open");document.getElementById("burger-drawer").classList.remove("open");}
+
+// ── Sport sheet ──
+function toggleSportSheet(){
+  const sheet=document.getElementById('sport-sheet');
+  const overlay=document.getElementById('sport-sheet-overlay');
+  const isOpen=sheet.style.bottom==='0px';
+  if(isOpen){closeSportSheet();}else{
+    overlay.style.display='block';
+    sheet.style.bottom='0px';
+    // highlight sport nav btn
+    document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelector('.nav-btn[data-nav="sport"]').classList.add('active');
+  }
+}
+function closeSportSheet(){
+  document.getElementById('sport-sheet').style.bottom='-300px';
+  document.getElementById('sport-sheet-overlay').style.display='none';
+  // remove active from sport if no sport screen active
+  const active=document.querySelector('.screen.active');
+  const sportScreens=['seances','videos','entrees'];
+  if(!active||!sportScreens.includes(active.id.replace('screen-',''))){
+    document.querySelector('.nav-btn[data-nav="sport"]')?.classList.remove('active');
+  }
+}
+
+// Patch goTo to update bottom nav active state
 const _origGoTo=goTo;
-goTo = function(id){_origGoTo(id);document.querySelectorAll(".burger-item").forEach(b=>{b.classList.toggle("active",b.dataset.screen===id);});};
+const NAV_MAP={home:'home',seances:'sport',videos:'sport',entrees:'sport',sante:'sante',stats:'sante',cal:'cal',cycle:'cycle'};
+goTo = function(id){
+  _origGoTo(id);
+  const navKey=NAV_MAP[id]||id;
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.nav===navKey));
+  // also keep sport btn active for sport sub-screens
+  if(['seances','videos','entrees'].includes(id)){
+    document.querySelector('.nav-btn[data-nav="sport"]')?.classList.add('active');
+  }
+};
 
 // ── PWA + Init ──
 // Désactiver et nettoyer les anciens Service Workers en dev
