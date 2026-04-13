@@ -13,6 +13,7 @@ export let state = {
   pas:           DB.get('ff_pas', {}),
   pasGoal:       DB.get('ff_pas_goal', 10000),
   challenges:    DB.get('ff_challenges', []),
+  instructors:   DB.get('ff_instructors', []),
 };
 
 export let _currentUserId = null;
@@ -46,6 +47,7 @@ export async function save() {
   DB.set('ff_pas',            state.pas || {});
   DB.set('ff_pas_goal',       state.pasGoal || 10000);
   DB.set('ff_challenges',     state.challenges || []);
+  DB.set('ff_instructors', state.instructors || []);
 
   if (!_currentUserId) return; // pas connecté, on s'arrête là
 
@@ -67,6 +69,7 @@ export async function save() {
         pas:            state.pas || {},
         pas_goal:       state.pasGoal || 10000,
         challenges:     state.challenges || [],
+        instructors: state.instructors || [],
         updated_at:     new Date().toISOString(),
       }, { onConflict: 'user_id' });
       if (error) throw error;
@@ -96,6 +99,7 @@ export async function loadFromSupabase(userId) {
       state.pas           = data.pas || {};
       state.pasGoal       = data.pas_goal || 10000;
       state.challenges    = data.challenges || [];
+      state.instructors = data.instructors || [];
       // Met à jour le cache local avec les données du serveur
       DB.set('ff_workouts',       state.workouts);
       DB.set('ff_sessions',       state.sessions);
@@ -108,6 +112,7 @@ export async function loadFromSupabase(userId) {
       DB.set('ff_pas',            state.pas);
       DB.set('ff_pas_goal',       state.pasGoal);
       DB.set('ff_challenges',     state.challenges);
+      DB.set('ff_instructors', state.instructors);
     } else {
       // Nouvel utilisateur : BDD vide, on ne pousse rien
       setSyncStatus('saved');

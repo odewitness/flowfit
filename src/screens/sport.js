@@ -28,6 +28,25 @@ export function switchSportTab(tab, force) {
   if (tab === 'challenges') renderChallengesScreen();
 }
 
+// ── Helpers instructeurs ──
+
+/** Retourne la liste des instructeurs depuis state.instructors (table dédiée) */
+function getInstructors() {
+  return state.instructors || [];
+}
+
+/** Trouve un instructeur par son ID */
+function getInstructorById(id) {
+  return getInstructors().find(i => i.id === id) || null;
+}
+
+/** Retourne le nom affichable d'un instructeur à partir de son ID */
+function instructorName(id) {
+  if (!id) return '';
+  const inst = getInstructorById(id);
+  return inst ? inst.name : '';
+}
+
 // ── Workouts ──
 let editingWorkoutId = null, tempExercises = [], workoutMode = 'sequential';
 
@@ -113,6 +132,7 @@ export function selectMode(m) {
   document.getElementById('mode-circuit')?.classList.toggle('active', m === 'circuit');
   const rf = document.getElementById('circuit-rounds-field'); if (rf) rf.style.display = m === 'circuit' ? '' : 'none';
 }
+
 export function renderTempExercises() {
   const el = document.getElementById('wf-exos'); if (!el) return;
   el.innerHTML = tempExercises.length ? tempExercises.map((ex, i) => `
@@ -287,30 +307,46 @@ export function renderVideosScreen2() {
   const el = document.getElementById('videos-list2'); if (!el) return;
   const filtered = (state.videos || []).filter(v => {
     if (_videoPhaseFilter2 && !(v.phases?.includes(_videoPhaseFilter2))) return false;
-    if (_videoInstructorFilter2 && v.instructor !== _videoInstructorFilter2) return false;
+    // Filtre par instructorId (comparaison d'ID, plus de problème de casse)
+    if (_videoInstructorFilter2 && v.instructorId !== _videoInstructorFilter2) return false;
     return true;
   });
+
   const instEl = document.getElementById('video-instructor-filter2');
   if (instEl) {
-    const insts = [...new Set((state.videos || []).map(v => v.instructor).filter(Boolean))];
+    const instructors = getInstructors();
+    // N'afficher que les instructeurs qui ont au moins une vidéo
+    const usedIds = new Set((state.videos || []).map(v => v.instructorId).filter(Boolean));
+    const usedInstructors = instructors.filter(i => usedIds.has(i.id));
+
     instEl.style.cssText = 'display:flex;gap:12px;flex-wrap:wrap;justify-content:flex-start;margin-bottom:12px;';
-    instEl.innerHTML = insts.length
-      ? [`<div onclick="filterInstructor2('')" style="display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;"><div style="width:40px;height:40px;border-radius:50%;background:${!_videoInstructorFilter2 ? 'var(--rose)' : 'var(--bg3)'};display:flex;align-items:center;justify-content:center;font-size:20px;border:2px solid ${!_videoInstructorFilter2 ? 'var(--rose)' : 'var(--border2)'};">👸</div><span style="font-size:10px;font-weight:600;color:${!_videoInstructorFilter2 ? 'var(--rose)' : 'var(--text2)'};">Tous</span></div>`]
-        .concat(insts.map(ins => `<div onclick="filterInstructor2('${escHtml(ins)}')" style="display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;"><div style="width:40px;height:40px;border-radius:50%;background:${_videoInstructorFilter2 === ins ? 'var(--rose)' : 'var(--bg3)'};display:flex;align-items:center;justify-content:center;font-size:20px;border:2px solid ${_videoInstructorFilter2 === ins ? 'var(--rose)' : 'var(--border2)'};">👸</div><span style="font-size:10px;font-weight:600;color:${_videoInstructorFilter2 === ins ? 'var(--rose)' : 'var(--text2)'};text-align:center;max-width:56px;line-height:1.2;">${escHtml(ins.split(' ')[0])}</span></div>`)).join('')
+    instEl.innerHTML = usedInstructors.length
+      ? [`<div onclick="filterInstructor2('')" style="display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;">
+            <div style="width:40px;height:40px;border-radius:50%;background:${!_videoInstructorFilter2 ? 'var(--rose)' : 'var(--bg3)'};display:flex;align-items:center;justify-content:center;font-size:20px;border:2px solid ${!_videoInstructorFilter2 ? 'var(--rose)' : 'var(--border2)'};">👸</div>
+            <span style="font-size:10px;font-weight:600;color:${!_videoInstructorFilter2 ? 'var(--rose)' : 'var(--text2)'};">Tous</span>
+          </div>`]
+        .concat(usedInstructors.map(ins => `
+          <div onclick="filterInstructor2('${escHtml(ins.id)}')" style="display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;">
+            <div style="width:40px;height:40px;border-radius:50%;background:${_videoInstructorFilter2 === ins.id ? 'var(--rose)' : 'var(--bg3)'};display:flex;align-items:center;justify-content:center;font-size:20px;border:2px solid ${_videoInstructorFilter2 === ins.id ? 'var(--rose)' : 'var(--border2)'};">👸</div>
+            <span style="font-size:10px;font-weight:600;color:${_videoInstructorFilter2 === ins.id ? 'var(--rose)' : 'var(--text2)'};text-align:center;max-width:56px;line-height:1.2;">${escHtml(ins.name.split(' ')[0])}</span>
+          </div>`)).join('')
       : '';
   }
+
   if (!filtered.length) { el.innerHTML = `<div class="card" style="text-align:center;color:var(--text2);">Aucune vidéo${_videoPhaseFilter2 ? ' pour cette phase' : ''}. Ajoute-en une ! 🎬</div>`; return; }
   el.innerHTML = filtered.map(v => {
     const phasePills = v.phases?.length ? `<div class="yt-phases-row">${v.phases.map(p => `<span class="pill ${PHASES[p]?.cls || 'pill-neutre'}" style="font-size:10px;">${PHASES[p]?.emoji || ''} ${PHASES[p]?.label || p}</span>`).join('')}</div>` : '';
     const doneBadge = v.done ? `<span class="yt-done-badge">✓ Fait le ${formatDate(v.doneDate || '')}</span>` : '';
     const kcalBadge = v.done && v.kcal ? `<span class="pill pill-neutre" style="font-size:10px;">🔥 ${v.kcal} kcal</span>` : '';
     const minBadge = v.minutes ? `<span class="pill pill-neutre" style="font-size:10px;">⏱ ${v.minutes} min</span>` : '';
+    // Résolution du nom de l'instructeur depuis l'ID
+    const instName = instructorName(v.instructorId);
     return `<div class="yt-card${v.done ? ' done' : ''}">
       ${v.videoId ? `<div class="yt-thumbnail-container" onclick="openYtVideo('${escHtml(v.url)}')"><img class="yt-thumbnail" src="${ytThumb(v.videoId)}" alt="${escHtml(v.name)}" loading="lazy"/><div class="yt-play-btn"><div class="yt-play-icon"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg></div></div></div>` : ''}
       <div class="yt-card-body">
         ${phasePills}
         <div class="yt-card-title">${escHtml(v.name)}</div>
-        <div class="yt-card-meta">${v.instructor ? escHtml(v.instructor) + ' · ' : ''}<span class="yt-badge">▶ YouTube</span></div>
+        <div class="yt-card-meta">${instName ? escHtml(instName) + ' · ' : ''}<span class="yt-badge">▶ YouTube</span></div>
         <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">${minBadge}${doneBadge}${kcalBadge}</div>
         <div class="yt-card-actions">
           <button class="btn btn-ghost btn-sm" style="flex:1;" onclick="markVideoDone('${v.id}')">${v.done ? '↩ Refaire' : '✓ Marquer faite'}</button>
@@ -323,7 +359,8 @@ export function renderVideosScreen2() {
 }
 
 export function filterVideos2(phase) { _videoPhaseFilter2 = phase; renderVideosScreen2(); }
-export function filterInstructor2(ins) { _videoInstructorFilter2 = ins; renderVideosScreen2(); }
+/** Filtre désormais par ID d'instructeur (plus par nom brut) */
+export function filterInstructor2(instructorId) { _videoInstructorFilter2 = instructorId; renderVideosScreen2(); }
 export function openYtVideo(url) { window.open(url, '_blank'); }
 export function deleteVideo(id) { if (!confirm('Supprimer cette vidéo ?')) return; state.videos = state.videos.filter(v => v.id !== id); save(); renderVideosScreen2(); showToast('🗑 Vidéo supprimée'); }
 
@@ -351,6 +388,25 @@ export function confirmVideoDone(id, skip = false) {
   save(); document.getElementById('modal-overlay').classList.remove('open'); renderVideosScreen2(); showToast('🎉 Vidéo marquée comme faite !');
 }
 
+// ── Formulaire vidéo — sélecteur d'instructeur ──
+
+/**
+ * Génère le <select> d'instructeurs pour les formulaires d'ajout/édition de vidéo.
+ * Un lien "＋ Nouvel instructeur" permet de créer à la volée.
+ */
+function instructorSelectHtml(selectedId = '') {
+  const instructors = getInstructors();
+  const options = instructors.map(i =>
+    `<option value="${escHtml(i.id)}"${selectedId === i.id ? ' selected' : ''}>${escHtml(i.name)}</option>`
+  ).join('');
+  return `
+    <select id="vid-instructor-id">
+      <option value="">— Aucun instructeur —</option>
+      ${options}
+    </select>
+    <button type="button" class="btn btn-ghost btn-sm" style="margin-top:6px;width:auto;" onclick="openNewInstructorModal()">＋ Nouvel instructeur</button>`;
+}
+
 export function openAddVideo() {
   const phaseOptions = Object.entries(PHASES).map(([k, p]) => `<label class="phases-multi-option" onclick="toggleVideoPhase('${k}',this)"><input type="checkbox" value="${k}"/><span style="font-size:16px;">${p.emoji}</span><span class="phase-opt-label">${p.label}</span></label>`).join('');
   openModal('🎬 Ajouter une vidéo', `
@@ -358,12 +414,11 @@ export function openAddVideo() {
     <div id="vid-thumb-preview" style="margin-bottom:12px;border-radius:var(--radius-sm);overflow:hidden;display:none;"><img id="vid-thumb-img" style="width:100%;aspect-ratio:16/9;object-fit:cover;" alt=""/></div>
     <div class="field"><label>Nom de la séance</label><input id="vid-name" placeholder="Ex: Yoga doux menstruel"/></div>
     <div class="field"><label>Durée (minutes)</label><input id="vid-minutes" type="number" min="0" max="300" placeholder="Ex: 30" inputmode="numeric" oninput="this.value=this.value.replace(/[^0-9]/g,'')"/></div>
-    <div class="field"><label>Instructeur / Chaîne</label><input id="vid-instructor" list="instructor-list" placeholder="Ex: Lidia Mera"/>
-      <datalist id="instructor-list">${[...new Set((state.videos || []).map(v => v.instructor).filter(Boolean))].map(n => `<option value="${escHtml(n)}"/>`).join('')}</datalist>
-    </div>
+    <div class="field"><label>Instructeur / Chaîne</label>${instructorSelectHtml()}</div>
     <div class="field"><label>Phases du cycle</label><div style="font-size:12px;color:var(--text2);margin-bottom:8px;">Associe cette vidéo à une ou plusieurs phases</div><div class="phases-multi-select" id="vid-phases">${phaseOptions}</div></div>
     <button class="btn btn-primary" style="margin-top:8px" onclick="saveVideo()">💾 Ajouter</button>`);
 }
+
 export function toggleVideoPhase(key, labelEl) {
   const cb = labelEl.querySelector('input[type=checkbox]'); cb.checked = !cb.checked;
   Object.keys(PHASES).forEach(k => labelEl.classList.remove('selected-' + k));
@@ -375,16 +430,19 @@ export function previewYtThumb() {
   const prev = document.getElementById('vid-thumb-preview'); const img = document.getElementById('vid-thumb-img');
   if (id && prev && img) { img.src = ytThumb(id); prev.style.display = ''; } else if (prev) prev.style.display = 'none';
 }
+
 export function saveVideo() {
   const url = document.getElementById('vid-url')?.value?.trim(); if (!url) { showToast('❌ Colle un lien YouTube'); return; }
   const name = document.getElementById('vid-name')?.value?.trim() || 'Séance YouTube';
   const videoId = ytVideoId(url);
   const phases = [...document.querySelectorAll('#vid-phases input[type=checkbox]:checked')].map(cb => cb.value);
   const minutes = parseInt(document.getElementById('vid-minutes')?.value) || 0;
-  const instructor = document.getElementById('vid-instructor')?.value?.trim() || '';
-  state.videos.push({ id: Date.now().toString(), url, videoId, name, minutes, instructor, phases });
+  // On stocke l'ID de l'instructeur, plus son nom en clair
+  const instructorId = document.getElementById('vid-instructor-id')?.value || '';
+  state.videos.push({ id: Date.now().toString(), url, videoId, name, minutes, instructorId, phases });
   save(); document.getElementById('modal-overlay').classList.remove('open'); renderVideosScreen2(); showToast('✅ Vidéo ajoutée !');
 }
+
 export function editVideo(id) {
   const v = state.videos.find(x => x.id === id); if (!v) return;
   const phaseOptions = Object.entries(PHASES).map(([k, p]) => `<label class="phases-multi-option${v.phases?.includes(k) ? ' selected-' + k : ''}" onclick="toggleVideoPhase('${k}',this)"><input type="checkbox" value="${k}"${v.phases?.includes(k) ? ' checked' : ''}/><span style="font-size:16px;">${p.emoji}</span><span class="phase-opt-label">${p.label}</span></label>`).join('');
@@ -393,19 +451,107 @@ export function editVideo(id) {
     <div id="vid-thumb-preview" style="margin-bottom:12px;border-radius:var(--radius-sm);overflow:hidden;${v.videoId ? '' : 'display:none'}"><img id="vid-thumb-img" src="${v.videoId ? ytThumb(v.videoId) : ''}" style="width:100%;aspect-ratio:16/9;object-fit:cover;" alt=""/></div>
     <div class="field"><label>Nom</label><input id="vid-name" value="${escHtml(v.name)}"/></div>
     <div class="field"><label>Durée (minutes)</label><input id="vid-minutes" type="number" min="0" max="300" value="${v.minutes || ''}" inputmode="numeric"/></div>
-    <div class="field"><label>Instructeur / Chaîne</label><input id="vid-instructor" value="${escHtml(v.instructor || '')}" placeholder="Ex: Lidia Mera"/></div>
+    <div class="field"><label>Instructeur / Chaîne</label>${instructorSelectHtml(v.instructorId || '')}</div>
     <div class="field"><label>Phases du cycle</label><div class="phases-multi-select" id="vid-phases">${phaseOptions}</div></div>
     <button class="btn btn-primary" style="margin-top:8px" onclick="saveVideoEdit('${id}')">💾 Enregistrer</button>`);
 }
+
 export function saveVideoEdit(id) {
   const v = state.videos.find(x => x.id === id); if (!v) return;
   const url = document.getElementById('vid-url')?.value?.trim(); if (!url) { showToast('❌ Lien YouTube requis'); return; }
   v.url = url; v.videoId = ytVideoId(url) || v.videoId;
   v.name = document.getElementById('vid-name')?.value?.trim() || v.name;
   v.minutes = parseInt(document.getElementById('vid-minutes')?.value) || 0;
-  v.instructor = document.getElementById('vid-instructor')?.value?.trim() || '';
+  // Mise à jour via ID, plus via chaîne brute
+  v.instructorId = document.getElementById('vid-instructor-id')?.value || '';
   v.phases = [...document.querySelectorAll('#vid-phases input[type=checkbox]:checked')].map(cb => cb.value);
   save(); document.getElementById('modal-overlay').classList.remove('open'); renderVideosScreen2(); showToast('✅ Vidéo mise à jour !');
+}
+
+// ── Gestion CRUD des instructeurs ──
+
+/**
+ * Ouvre une modale pour créer un nouvel instructeur.
+ * Appelé depuis le bouton "＋ Nouvel instructeur" dans les formulaires vidéo.
+ */
+export function openNewInstructorModal() {
+  openModal('👩‍🏫 Nouvel instructeur', `
+    <div class="field"><label>Nom *</label><input id="inst-name" placeholder="Ex: Lidia Mera"/></div>
+    <div class="field"><label>Lien de la chaîne (optionnel)</label><input id="inst-channel" placeholder="https://youtube.com/@..."/></div>
+    <div class="field"><label>Note / Genre de sport (optionnel)</label><input id="inst-note" placeholder="Ex: Yoga, Pilates, HIIT…"/></div>
+    <button class="btn btn-primary" style="margin-top:8px" onclick="saveNewInstructor()">💾 Créer</button>`);
+}
+
+export function saveNewInstructor() {
+  const name = document.getElementById('inst-name')?.value?.trim();
+  if (!name) { showToast('❌ Le nom est requis'); return; }
+  if (!state.instructors) state.instructors = [];
+  const newInstructor = {
+    id: Date.now().toString(),
+    name,
+    channel: document.getElementById('inst-channel')?.value?.trim() || '',
+    note: document.getElementById('inst-note')?.value?.trim() || '',
+  };
+  state.instructors.push(newInstructor);
+  save();
+  document.getElementById('modal-overlay').classList.remove('open');
+  showToast('✅ Instructeur créé !');
+}
+
+/** Ouvre l'écran de gestion des instructeurs (liste + édition + suppression) */
+export function openInstructorsManager() {
+  const instructors = getInstructors();
+  const rows = instructors.length
+    ? instructors.map(i => `
+        <div class="card" style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;">
+          <div>
+            <div style="font-weight:600;font-size:14px;">${escHtml(i.name)}</div>
+            ${i.note ? `<div style="font-size:12px;color:var(--text2);">${escHtml(i.note)}</div>` : ''}
+            ${i.channel ? `<a href="${escHtml(i.channel)}" target="_blank" style="font-size:11px;color:var(--rose);">🔗 Chaîne</a>` : ''}
+          </div>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-ghost btn-sm" onclick="editInstructor('${i.id}')" style="width:auto;padding:6px 10px;">✏️</button>
+            <button class="btn btn-ghost btn-sm" onclick="deleteInstructor('${i.id}')" style="color:var(--rouge);border-color:rgba(212,130,122,.25);width:auto;padding:6px 10px;">🗑</button>
+          </div>
+        </div>`).join('')
+    : `<div style="color:var(--text3);font-size:13px;text-align:center;padding:16px;">Aucun instructeur enregistré.</div>`;
+  openModal('👩‍🏫 Instructeurs / Chaînes', `
+    ${rows}
+    <button class="btn btn-primary" style="margin-top:12px" onclick="openNewInstructorModal()">＋ Ajouter un instructeur</button>`);
+}
+
+export function editInstructor(id) {
+  const inst = getInstructorById(id); if (!inst) return;
+  openModal('✏️ Modifier l\'instructeur', `
+    <div class="field"><label>Nom *</label><input id="inst-name" value="${escHtml(inst.name)}"/></div>
+    <div class="field"><label>Lien de la chaîne</label><input id="inst-channel" value="${escHtml(inst.channel || '')}"/></div>
+    <div class="field"><label>Note / Genre</label><input id="inst-note" value="${escHtml(inst.note || '')}"/></div>
+    <button class="btn btn-primary" style="margin-top:8px" onclick="saveInstructorEdit('${id}')">💾 Enregistrer</button>`);
+}
+
+export function saveInstructorEdit(id) {
+  const inst = getInstructorById(id); if (!inst) return;
+  const name = document.getElementById('inst-name')?.value?.trim();
+  if (!name) { showToast('❌ Le nom est requis'); return; }
+  inst.name = name;
+  inst.channel = document.getElementById('inst-channel')?.value?.trim() || '';
+  inst.note = document.getElementById('inst-note')?.value?.trim() || '';
+  save();
+  document.getElementById('modal-overlay').classList.remove('open');
+  showToast('✅ Instructeur mis à jour !');
+  // Les vidéos liées affichent automatiquement le nouveau nom via instructorName()
+}
+
+export function deleteInstructor(id) {
+  const usedByVideo = (state.videos || []).some(v => v.instructorId === id);
+  if (usedByVideo && !confirm('Cet instructeur est lié à des vidéos. Les vidéos garderont leur contenu mais n\'auront plus d\'instructeur. Continuer ?')) return;
+  if (!usedByVideo && !confirm('Supprimer cet instructeur ?')) return;
+  // Délier les vidéos qui référençaient cet instructeur
+  (state.videos || []).forEach(v => { if (v.instructorId === id) v.instructorId = ''; });
+  state.instructors = state.instructors.filter(i => i.id !== id);
+  save();
+  showToast('🗑 Instructeur supprimé');
+  openInstructorsManager(); // Rafraîchir la liste
 }
 
 // ── Entrées ──
