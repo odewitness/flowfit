@@ -17,7 +17,9 @@ import {
   startWorkoutById, logSet, nextExo, prevExo, finishSession, selRPE, selMoodF, saveSession,
   renderVideosScreen2, filterVideos2, filterInstructor2, openYtVideo, deleteVideo, markVideoDone, confirmVideoDone, openAddVideo, saveVideo, editVideo, saveVideoEdit, toggleVideoPhase, previewYtThumb,
   renderEntrees2, deleteSessionEntry, editSessionEntry, saveSessionEntry,
-  renderPasScreen, savePasToday, savePasGoal,
+  renderPasScreen, savePasToday, savePasGoal, openNewInstructorModal, saveNewInstructor,
+  openInstructorsManager, editInstructor,
+  saveInstructorEdit, deleteInstructor
 } from './screens/sport.js';
 import {
   renderChallengesScreen, openNewChallenge, openChallengeSession,
@@ -53,7 +55,12 @@ Object.assign(window, {
   startWorkoutById, logSet, nextExo, prevExo, finishSession, selRPE, selMoodF, saveSession,
   // Sport - videos
   renderVideosScreen2, filterVideos2, filterInstructor2, openYtVideo, deleteVideo,
-  markVideoDone, confirmVideoDone, openAddVideo, saveVideo, editVideo, saveVideoEdit, toggleVideoPhase, previewYtThumb,
+  markVideoDone, confirmVideoDone, openAddVideo, saveVideo, editVideo, saveVideoEdit, toggleVideoPhase, previewYtThumb, openNewInstructorModal,
+  saveNewInstructor,
+  openInstructorsManager,
+  editInstructor,
+  saveInstructorEdit,
+  deleteInstructor,
   // Sport - entrees
   renderEntrees2, deleteSessionEntry, editSessionEntry, saveSessionEntry,
   // Sport - pas
