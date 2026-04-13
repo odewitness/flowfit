@@ -32,6 +32,11 @@ export function renderHome() {
   if (alreadyDoneToday) {
     if (sugg) sugg.style.display = 'none';
     if (videoSuggEl) videoSuggEl.style.display = 'none';
+    if (sugg) {
+    sugg.style.display = '';
+    document.getElementById('home-suggestion-content').innerHTML =
+      `<div style="text-align:center;padding:8px 0;font-size:14px;">🎉 Séance du jour complétée !<br><span style="font-size:12px;color:var(--text2);">Bravo, tu t'es déjà entraînée aujourd'hui 💪</span></div>`;
+  }
   } else if (todayPlanned) {
     if (todayPlanned.type === 'workout') {
       const pw = state.workouts.find(w => w.id === todayPlanned.id);
