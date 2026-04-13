@@ -318,7 +318,7 @@ export function renderVideosScreen2() {
         </button>
         <button id="vsub-btn-instructeurs" onclick="switchVideoSubTab('instructeurs')"
           style="flex:1;padding:7px 0;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;background:transparent;color:var(--text2);">
-          👩‍🏫 Instructeurs
+          👩‍🏫 Instructrices
         </button>
       </div>
       <div id="vsub-panel-liste"></div>
@@ -417,9 +417,9 @@ function _renderInstructeursTab() {
     el.innerHTML = `
       <div style="text-align:center;padding:32px 16px;color:var(--text2);">
         <div style="font-size:40px;margin-bottom:12px;">👩‍🏫</div>
-        <div style="font-size:15px;font-weight:600;margin-bottom:6px;color:var(--text);">Aucun instructeur encore</div>
-        <div style="font-size:13px;margin-bottom:18px;">Ajoute tes instructeurs favoris pour les associer à tes vidéos.</div>
-        <button class="btn btn-primary" onclick="openNewInstructorModal()">＋ Ajouter un instructeur</button>
+        <div style="font-size:15px;font-weight:600;margin-bottom:6px;color:var(--text);">Aucune instructrice encore</div>
+        <div style="font-size:13px;margin-bottom:18px;">Ajoute tes instructrices favories pour les associer à tes vidéos.</div>
+        <button class="btn btn-primary" onclick="openNewInstructorModal()">＋ Ajouter une instructrice</button>
       </div>`;
     return;
   }
@@ -485,7 +485,7 @@ export function openInstructorDetail(id) {
             <button class="btn btn-ghost btn-sm" onclick="openYtVideo('${escHtml(v.url)}')" style="width:auto;padding:6px 10px;flex-shrink:0;" title="Ouvrir la vidéo">▶</button>
           </div>`;
       }).join('')
-    : `<div style="color:var(--text3);font-size:13px;padding:14px 0;text-align:center;">Aucune vidéo associée à cet instructeur.</div>`;
+    : `<div style="color:var(--text3);font-size:13px;padding:14px 0;text-align:center;">Aucune vidéo associée à cette instructrice.</div>`;
 
   openModal(escHtml(inst.name), `
     <div style="margin-bottom:16px;">
@@ -548,10 +548,10 @@ function instructorSelectHtml(selectedId = '') {
   ).join('');
   return `
     <select id="vid-instructor-id">
-      <option value="">— Aucun instructeur —</option>
+      <option value="">— Aucune instructrice —</option>
       ${options}
     </select>
-    <button type="button" class="btn btn-ghost btn-sm" style="margin-top:6px;width:auto;" onclick="openNewInstructorModal()">＋ Nouvel instructeur</button>`;
+    <button type="button" class="btn btn-ghost btn-sm" style="margin-top:6px;width:auto;" onclick="openNewInstructorModal()">＋ Nouvelle instructrice</button>`;
 }
 
 export function openAddVideo() {
@@ -561,7 +561,7 @@ export function openAddVideo() {
     <div id="vid-thumb-preview" style="margin-bottom:12px;border-radius:var(--radius-sm);overflow:hidden;display:none;"><img id="vid-thumb-img" style="width:100%;aspect-ratio:16/9;object-fit:cover;" alt=""/></div>
     <div class="field"><label>Nom de la séance</label><input id="vid-name" placeholder="Ex: Yoga doux menstruel"/></div>
     <div class="field"><label>Durée (minutes)</label><input id="vid-minutes" type="number" min="0" max="300" placeholder="Ex: 30" inputmode="numeric" oninput="this.value=this.value.replace(/[^0-9]/g,'')"/></div>
-    <div class="field"><label>Instructeur / Chaîne</label>${instructorSelectHtml()}</div>
+    <div class="field"><label>Instructrice / Chaîne</label>${instructorSelectHtml()}</div>
     <div class="field"><label>Phases du cycle</label><div style="font-size:12px;color:var(--text2);margin-bottom:8px;">Associe cette vidéo à une ou plusieurs phases</div><div class="phases-multi-select" id="vid-phases">${phaseOptions}</div></div>
     <button class="btn btn-primary" style="margin-top:8px" onclick="saveVideo()">💾 Ajouter</button>`);
 }
@@ -598,7 +598,7 @@ export function editVideo(id) {
     <div id="vid-thumb-preview" style="margin-bottom:12px;border-radius:var(--radius-sm);overflow:hidden;${v.videoId ? '' : 'display:none'}"><img id="vid-thumb-img" src="${v.videoId ? ytThumb(v.videoId) : ''}" style="width:100%;aspect-ratio:16/9;object-fit:cover;" alt=""/></div>
     <div class="field"><label>Nom</label><input id="vid-name" value="${escHtml(v.name)}"/></div>
     <div class="field"><label>Durée (minutes)</label><input id="vid-minutes" type="number" min="0" max="300" value="${v.minutes || ''}" inputmode="numeric"/></div>
-    <div class="field"><label>Instructeur / Chaîne</label>${instructorSelectHtml(v.instructorId || '')}</div>
+    <div class="field"><label>Instructrice / Chaîne</label>${instructorSelectHtml(v.instructorId || '')}</div>
     <div class="field"><label>Phases du cycle</label><div class="phases-multi-select" id="vid-phases">${phaseOptions}</div></div>
     <button class="btn btn-primary" style="margin-top:8px" onclick="saveVideoEdit('${id}')">💾 Enregistrer</button>`);
 }
@@ -622,7 +622,7 @@ export function saveVideoEdit(id) {
  * Appelé depuis le bouton "＋ Nouvel instructeur" dans les formulaires vidéo.
  */
 export function openNewInstructorModal() {
-  openModal('👩‍🏫 Nouvel instructeur', `
+  openModal('👩‍🏫 Nouvelle instructrice', `
     <div class="field"><label>Nom *</label><input id="inst-name" placeholder="Ex: Lidia Mera"/></div>
     <div class="field"><label>Lien de la chaîne (optionnel)</label><input id="inst-channel" placeholder="https://youtube.com/@..."/></div>
     <div class="field"><label>Note / Genre de sport (optionnel)</label><input id="inst-note" placeholder="Ex: Yoga, Pilates, HIIT…"/></div>
@@ -642,7 +642,7 @@ export function saveNewInstructor() {
   state.instructors.push(newInstructor);
   save();
   document.getElementById('modal-overlay').classList.remove('open');
-  showToast('✅ Instructeur créé !');
+  showToast('✅ Instructrice créée !');
 }
 
 /** Ouvre l'écran de gestion des instructeurs (liste + édition + suppression) */
@@ -661,15 +661,15 @@ export function openInstructorsManager() {
             <button class="btn btn-ghost btn-sm" onclick="deleteInstructor('${i.id}')" style="color:var(--rouge);border-color:rgba(212,130,122,.25);width:auto;padding:6px 10px;">🗑</button>
           </div>
         </div>`).join('')
-    : `<div style="color:var(--text3);font-size:13px;text-align:center;padding:16px;">Aucun instructeur enregistré.</div>`;
-  openModal('👩‍🏫 Instructeurs / Chaînes', `
+    : `<div style="color:var(--text3);font-size:13px;text-align:center;padding:16px;">Aucune instructrice enregistrée.</div>`;
+  openModal('👩‍🏫 Instructrices / Chaînes', `
     ${rows}
-    <button class="btn btn-primary" style="margin-top:12px" onclick="openNewInstructorModal()">＋ Ajouter un instructeur</button>`);
+    <button class="btn btn-primary" style="margin-top:12px" onclick="openNewInstructorModal()">＋ Ajouter une instructrice</button>`);
 }
 
 export function editInstructor(id) {
   const inst = getInstructorById(id); if (!inst) return;
-  openModal('✏️ Modifier l\'instructeur', `
+  openModal('✏️ Modifier l\'instructrice', `
     <div class="field"><label>Nom *</label><input id="inst-name" value="${escHtml(inst.name)}"/></div>
     <div class="field"><label>Lien de la chaîne</label><input id="inst-channel" value="${escHtml(inst.channel || '')}"/></div>
     <div class="field"><label>Note / Genre</label><input id="inst-note" value="${escHtml(inst.note || '')}"/></div>
@@ -685,20 +685,20 @@ export function saveInstructorEdit(id) {
   inst.note = document.getElementById('inst-note')?.value?.trim() || '';
   save();
   document.getElementById('modal-overlay').classList.remove('open');
-  showToast('✅ Instructeur mis à jour !');
+  showToast('✅ Instructrice mise à jour !');
   _renderInstructeursTab();
   // Les vidéos liées affichent automatiquement le nouveau nom via instructorName()
 }
 
 export function deleteInstructor(id) {
   const usedByVideo = (state.videos || []).some(v => v.instructorId === id);
-  if (usedByVideo && !confirm('Cet instructeur est lié à des vidéos. Les vidéos garderont leur contenu mais n\'auront plus d\'instructeur. Continuer ?')) return;
-  if (!usedByVideo && !confirm('Supprimer cet instructeur ?')) return;
-  // Délier les vidéos qui référençaient cet instructeur
+  if (usedByVideo && !confirm('Cette instructrice est lié à des vidéos. Les vidéos garderont leur contenu mais n\'auront plus d\'instructrice. Continuer ?')) return;
+  if (!usedByVideo && !confirm('Supprimer cette instructrice ?')) return;
+  // Délier les vidéos qui référençaient cette instructrice
   (state.videos || []).forEach(v => { if (v.instructorId === id) v.instructorId = ''; });
   state.instructors = state.instructors.filter(i => i.id !== id);
   save();
-  showToast('🗑 Instructeur supprimé');
+  showToast('🗑 Instructrice supprimée');
   document.getElementById('modal-overlay')?.classList.remove('open');
   _renderInstructeursTab();
 }
