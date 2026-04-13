@@ -28,7 +28,24 @@ export function renderHome() {
   const sugg = document.getElementById('home-suggestion-card');
   const videoSuggEl = document.getElementById('home-video-card');
 
-  if (todayPlanned) {
+  // Si une séance (ou vidéo) a déjà été réalisée aujourd'hui, on masque les suggestions
+const alreadyDoneToday = state.sessions.some(s => s.date === todayStr());
+if (alreadyDoneToday) {
+  if (sugg) sugg.style.display = 'none';
+  if (videoSuggEl) videoSuggEl.style.display = 'none';
+  // On peut afficher un message de félicitations à la place
+  // (optionnel — supprime les 3 lignes suivantes si tu ne veux pas de message)
+  if (sugg) {
+    sugg.style.display = '';
+    document.getElementById('home-suggestion-content').innerHTML =
+      `<div style="text-align:center;padding:8px 0;font-size:14px;">🎉 Séance du jour complétée !<br><span style="font-size:12px;color:var(--text2);">Bravo, tu as déjà entraîné aujourd'hui 💪</span></div>`;
+  }
+  // Arrêt anticipé : on ne traite pas le reste de la logique de suggestion
+  // (les blocs renderHomeChallenges, stats, etc. restent actifs)
+  return; // ← ATTENTION : retire ce return si tu veux quand même afficher les stats du dessous
+}
+
+  if (alreadyDoneToday && todayPlanned) {
     if (todayPlanned.type === 'workout') {
       const pw = state.workouts.find(w => w.id === todayPlanned.id);
       if (pw) {
@@ -53,7 +70,7 @@ export function renderHome() {
       } else if (videoSuggEl) videoSuggEl.style.display = 'none';
       sugg.style.display = 'none';
     }
-  } else {
+  } else if (!alreadyDoneToday) {
     if (phase && state.workouts.length) {
       const ok = state.workouts.filter(w => {
         if (!w.phase && !w.phases?.length) return true;
