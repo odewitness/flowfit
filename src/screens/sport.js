@@ -4,6 +4,7 @@ import { PHASES, EXERCISE_LIBRARY, todayStr, formatDate, escHtml, getPhaseForDat
 
 let _sportTab = 'seances';
 let _videoPhaseFilter2 = '', _videoInstructorFilter2 = '';
+let _videoSubTab = 'liste'; // 'liste' | 'instructeurs'
 
 export function renderSportScreen() { switchSportTab(_sportTab, true); }
 
@@ -303,11 +304,63 @@ export function saveSession(dm) {
 }
 
 // ── Videos ──
+
 export function renderVideosScreen2() {
+  const panel = document.getElementById('sport-panel-videos'); if (!panel) return;
+
+  // Injecter la structure de sous-onglets si pas encore présente
+  if (!panel.querySelector('#vsub-bar')) {
+    panel.insertAdjacentHTML('afterbegin', `
+      <div id="vsub-bar" style="display:flex;gap:6px;margin-bottom:14px;background:var(--bg3);border-radius:var(--radius-sm);padding:4px;">
+        <button id="vsub-btn-liste" onclick="switchVideoSubTab('liste')"
+          style="flex:1;padding:7px 0;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;background:transparent;color:var(--text2);">
+          ▶ Vidéos
+        </button>
+        <button id="vsub-btn-instructeurs" onclick="switchVideoSubTab('instructeurs')"
+          style="flex:1;padding:7px 0;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;background:transparent;color:var(--text2);">
+          👩‍🏫 Instructeurs
+        </button>
+      </div>
+      <div id="vsub-panel-liste"></div>
+      <div id="vsub-panel-instructeurs" style="display:none;"></div>`);
+
+    // Déplacer les éléments HTML existants (filtres, liste, bouton ajout) dans le panel liste
+    const listePanel = panel.querySelector('#vsub-panel-liste');
+    [...panel.children].forEach(child => {
+      if (!child.id?.startsWith('vsub')) listePanel.appendChild(child);
+    });
+  }
+
+  // Mettre à jour l'apparence des boutons
+  const btnListe = panel.querySelector('#vsub-btn-liste');
+  const btnInst  = panel.querySelector('#vsub-btn-instructeurs');
+  if (btnListe) {
+    btnListe.style.background    = _videoSubTab === 'liste' ? 'var(--bg2)' : 'transparent';
+    btnListe.style.color         = _videoSubTab === 'liste' ? 'var(--text)' : 'var(--text2)';
+    btnListe.style.boxShadow     = _videoSubTab === 'liste' ? '0 1px 3px rgba(180,130,110,.1)' : 'none';
+  }
+  if (btnInst) {
+    btnInst.style.background     = _videoSubTab === 'instructeurs' ? 'var(--bg2)' : 'transparent';
+    btnInst.style.color          = _videoSubTab === 'instructeurs' ? 'var(--text)' : 'var(--text2)';
+    btnInst.style.boxShadow      = _videoSubTab === 'instructeurs' ? '0 1px 3px rgba(180,130,110,.1)' : 'none';
+  }
+
+  panel.querySelector('#vsub-panel-liste').style.display         = _videoSubTab === 'liste' ? '' : 'none';
+  panel.querySelector('#vsub-panel-instructeurs').style.display  = _videoSubTab === 'instructeurs' ? '' : 'none';
+
+  if (_videoSubTab === 'liste') _renderVideoListe();
+  else _renderInstructeursTab();
+}
+
+export function switchVideoSubTab(tab) {
+  _videoSubTab = tab;
+  renderVideosScreen2();
+}
+
+function _renderVideoListe() {
   const el = document.getElementById('videos-list2'); if (!el) return;
   const filtered = (state.videos || []).filter(v => {
     if (_videoPhaseFilter2 && !(v.phases?.includes(_videoPhaseFilter2))) return false;
-    // Filtre par instructorId (comparaison d'ID, plus de problème de casse)
     if (_videoInstructorFilter2 && v.instructorId !== _videoInstructorFilter2) return false;
     return true;
   });
@@ -315,10 +368,8 @@ export function renderVideosScreen2() {
   const instEl = document.getElementById('video-instructor-filter2');
   if (instEl) {
     const instructors = getInstructors();
-    // N'afficher que les instructeurs qui ont au moins une vidéo
     const usedIds = new Set((state.videos || []).map(v => v.instructorId).filter(Boolean));
     const usedInstructors = instructors.filter(i => usedIds.has(i.id));
-
     instEl.style.cssText = 'display:flex;gap:12px;flex-wrap:wrap;justify-content:flex-start;margin-bottom:12px;';
     instEl.innerHTML = usedInstructors.length
       ? [`<div onclick="filterInstructor2('')" style="display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;">
@@ -339,14 +390,13 @@ export function renderVideosScreen2() {
     const doneBadge = v.done ? `<span class="yt-done-badge">✓ Fait le ${formatDate(v.doneDate || '')}</span>` : '';
     const kcalBadge = v.done && v.kcal ? `<span class="pill pill-neutre" style="font-size:10px;">🔥 ${v.kcal} kcal</span>` : '';
     const minBadge = v.minutes ? `<span class="pill pill-neutre" style="font-size:10px;">⏱ ${v.minutes} min</span>` : '';
-    // Résolution du nom de l'instructeur depuis l'ID
     const instName = instructorName(v.instructorId);
     return `<div class="yt-card${v.done ? ' done' : ''}">
       ${v.videoId ? `<div class="yt-thumbnail-container" onclick="openYtVideo('${escHtml(v.url)}')"><img class="yt-thumbnail" src="${ytThumb(v.videoId)}" alt="${escHtml(v.name)}" loading="lazy"/><div class="yt-play-btn"><div class="yt-play-icon"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg></div></div></div>` : ''}
       <div class="yt-card-body">
         ${phasePills}
         <div class="yt-card-title">${escHtml(v.name)}</div>
-        <div class="yt-card-meta">${instName ? escHtml(instName) + ' · ' : ''}<span class="yt-badge">▶ YouTube</span></div>
+        <div class="yt-card-meta">${instName ? `<span style="cursor:pointer;color:var(--rose);" onclick="switchVideoSubTab('instructeurs')">${escHtml(instName)}</span> · ` : ''}<span class="yt-badge">▶ YouTube</span></div>
         <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">${minBadge}${doneBadge}${kcalBadge}</div>
         <div class="yt-card-actions">
           <button class="btn btn-ghost btn-sm" style="flex:1;" onclick="markVideoDone('${v.id}')">${v.done ? '↩ Refaire' : '✓ Marquer faite'}</button>
@@ -356,6 +406,103 @@ export function renderVideosScreen2() {
       </div>
     </div>`;
   }).join('');
+}
+
+function _renderInstructeursTab() {
+  const el = document.getElementById('vsub-panel-instructeurs'); if (!el) return;
+  const instructors = getInstructors();
+  const videos = state.videos || [];
+
+  if (!instructors.length) {
+    el.innerHTML = `
+      <div style="text-align:center;padding:32px 16px;color:var(--text2);">
+        <div style="font-size:40px;margin-bottom:12px;">👩‍🏫</div>
+        <div style="font-size:15px;font-weight:600;margin-bottom:6px;color:var(--text);">Aucun instructeur encore</div>
+        <div style="font-size:13px;margin-bottom:18px;">Ajoute tes instructeurs favoris pour les associer à tes vidéos.</div>
+        <button class="btn btn-primary" onclick="openNewInstructorModal()">＋ Ajouter un instructeur</button>
+      </div>`;
+    return;
+  }
+
+  const totalVideos = videos.length;
+  el.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <div style="font-size:13px;color:var(--text2);">${instructors.length} instructeur${instructors.length > 1 ? 's' : ''} · ${totalVideos} vidéo${totalVideos > 1 ? 's' : ''}</div>
+      <button class="btn btn-primary btn-sm" onclick="openNewInstructorModal()" style="width:auto;padding:6px 14px;font-size:13px;">＋ Ajouter</button>
+    </div>
+    ${instructors.map(inst => {
+      const instVideos = videos.filter(v => v.instructorId === inst.id);
+      const totalMin   = instVideos.reduce((s, v) => s + (v.minutes || 0), 0);
+      const doneCount  = instVideos.filter(v => v.done).length;
+      const pct        = instVideos.length ? Math.round((doneCount / instVideos.length) * 100) : null;
+      return `
+        <div class="card" style="margin-bottom:10px;cursor:pointer;transition:box-shadow .15s;" onclick="openInstructorDetail('${inst.id}')">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:15px;font-weight:700;margin-bottom:3px;">${escHtml(inst.name)}</div>
+              ${inst.note ? `<div style="font-size:12px;color:var(--text2);margin-bottom:4px;">🏷 ${escHtml(inst.note)}</div>` : ''}
+              ${inst.channel ? `<a href="${escHtml(inst.channel)}" target="_blank" onclick="event.stopPropagation()" style="font-size:12px;color:var(--rose);text-decoration:none;">🔗 Voir la chaîne</a>` : ''}
+            </div>
+            <div style="display:flex;gap:6px;flex-shrink:0;margin-left:10px;">
+              <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();editInstructor('${inst.id}')" style="width:auto;padding:6px 10px;">✏️</button>
+              <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();deleteInstructor('${inst.id}')" style="color:var(--rouge);border-color:rgba(212,130,122,.25);width:auto;padding:6px 10px;">🗑</button>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center;">
+            <span class="pill pill-neutre" style="font-size:11px;">▶ ${instVideos.length} vidéo${instVideos.length > 1 ? 's' : ''}</span>
+            ${totalMin ? `<span class="pill pill-neutre" style="font-size:11px;">⏱ ${totalMin} min</span>` : ''}
+            ${instVideos.length ? `<span class="pill pill-neutre" style="font-size:11px;">✅ ${doneCount}/${instVideos.length} faites</span>` : ''}
+            ${pct !== null && instVideos.length > 0 ? `
+              <div style="flex:1;min-width:80px;height:4px;background:var(--bg3);border-radius:2px;overflow:hidden;">
+                <div style="height:100%;width:${pct}%;background:var(--menthe);border-radius:2px;transition:width .3s;"></div>
+              </div>` : ''}
+          </div>
+        </div>`;
+    }).join('')}`;
+}
+
+export function openInstructorDetail(id) {
+  const inst = getInstructorById(id); if (!inst) return;
+  const instVideos = (state.videos || []).filter(v => v.instructorId === id);
+  const totalMin   = instVideos.reduce((s, v) => s + (v.minutes || 0), 0);
+  const doneCount  = instVideos.filter(v => v.done).length;
+
+  const videosHtml = instVideos.length
+    ? instVideos.map(v => {
+        const thumb      = v.videoId ? `<img src="${ytThumb(v.videoId)}" style="width:80px;height:52px;object-fit:cover;border-radius:6px;flex-shrink:0;" alt=""/>` : '';
+        const phasePills = (v.phases || []).map(p => `<span class="pill ${PHASES[p]?.cls || ''}" style="font-size:9px;padding:2px 6px;">${PHASES[p]?.emoji || ''} ${PHASES[p]?.label || ''}</span>`).join('');
+        return `
+          <div style="display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border2);">
+            ${thumb}
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:13px;font-weight:600;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(v.name)}</div>
+              <div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center;">
+                ${v.minutes ? `<span style="font-size:11px;color:var(--text2);">⏱ ${v.minutes} min</span>` : ''}
+                ${v.done ? `<span style="font-size:11px;color:var(--menthe);">✅ Faite</span>` : `<span style="font-size:11px;color:var(--text3);">À faire</span>`}
+                ${phasePills}
+              </div>
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="openYtVideo('${escHtml(v.url)}')" style="width:auto;padding:6px 10px;flex-shrink:0;" title="Ouvrir la vidéo">▶</button>
+          </div>`;
+      }).join('')
+    : `<div style="color:var(--text3);font-size:13px;padding:14px 0;text-align:center;">Aucune vidéo associée à cet instructeur.</div>`;
+
+  openModal(escHtml(inst.name), `
+    <div style="margin-bottom:16px;">
+      ${inst.note ? `<div style="font-size:13px;color:var(--text2);margin-bottom:6px;">🏷 ${escHtml(inst.note)}</div>` : ''}
+      ${inst.channel ? `<a href="${escHtml(inst.channel)}" target="_blank" style="font-size:13px;color:var(--rose);text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-bottom:12px;">🔗 <span style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap;max-width:220px;">${escHtml(inst.channel)}</span></a>` : ''}
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <span class="pill pill-neutre">▶ ${instVideos.length} vidéo${instVideos.length > 1 ? 's' : ''}</span>
+        ${totalMin ? `<span class="pill pill-neutre">⏱ ${totalMin} min</span>` : ''}
+        ${instVideos.length ? `<span class="pill pill-neutre">✅ ${doneCount}/${instVideos.length} faites</span>` : ''}
+      </div>
+    </div>
+    <div style="font-size:12px;font-weight:700;letter-spacing:.05em;color:var(--text3);margin-bottom:4px;">VIDÉOS ASSOCIÉES</div>
+    ${videosHtml}
+    <div style="display:flex;gap:8px;margin-top:16px;">
+      <button class="btn btn-ghost btn-sm" style="flex:1;" onclick="editInstructor('${id}')">✏️ Modifier</button>
+      <button class="btn btn-ghost btn-sm" style="flex:1;color:var(--rouge);border-color:rgba(212,130,122,.25);" onclick="deleteInstructor('${id}')">🗑 Supprimer</button>
+    </div>`);
 }
 
 export function filterVideos2(phase) { _videoPhaseFilter2 = phase; renderVideosScreen2(); }
@@ -539,6 +686,7 @@ export function saveInstructorEdit(id) {
   save();
   document.getElementById('modal-overlay').classList.remove('open');
   showToast('✅ Instructeur mis à jour !');
+  _renderInstructeursTab();
   // Les vidéos liées affichent automatiquement le nouveau nom via instructorName()
 }
 
@@ -551,7 +699,8 @@ export function deleteInstructor(id) {
   state.instructors = state.instructors.filter(i => i.id !== id);
   save();
   showToast('🗑 Instructeur supprimé');
-  openInstructorsManager(); // Rafraîchir la liste
+  document.getElementById('modal-overlay')?.classList.remove('open');
+  _renderInstructeursTab();
 }
 
 // ── Entrées ──
