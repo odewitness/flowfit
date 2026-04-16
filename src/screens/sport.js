@@ -6,7 +6,31 @@ let _sportTab = 'seances';
 let _videoPhaseFilter2 = '', _videoInstructorFilter2 = '';
 let _videoSubTab = 'liste'; // 'liste' | 'instructeurs'
 
-export function renderSportScreen() { switchSportTab(_sportTab, true); }
+const _SPORT_TABS = ['seances', 'videos', 'pas', 'entrees', 'challenges'];
+let _swipeInitDone = false;
+
+function _initSportSwipe() {
+  if (_swipeInitDone) return;
+  const container = document.getElementById('sport-panel-seances')?.parentElement;
+  if (!container) return;
+  _swipeInitDone = true;
+  let _tx = 0, _ty = 0;
+  container.addEventListener('touchstart', e => {
+    _tx = e.changedTouches[0].screenX;
+    _ty = e.changedTouches[0].screenY;
+  }, { passive: true });
+  container.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].screenX - _tx;
+    const dy = e.changedTouches[0].screenY - _ty;
+    // Swipe horizontal seulement (>40px et plus horizontal que vertical)
+    if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy) * 1.2) return;
+    const idx = _SPORT_TABS.indexOf(_sportTab);
+    if (dx < 0 && idx < _SPORT_TABS.length - 1) switchSportTab(_SPORT_TABS[idx + 1]);
+    else if (dx > 0 && idx > 0) switchSportTab(_SPORT_TABS[idx - 1]);
+  }, { passive: true });
+}
+
+export function renderSportScreen() { switchSportTab(_sportTab, true); _initSportSwipe(); }
 
 export function switchSportTab(tab, force) {
   if (_sportTab === tab && !force) return;
@@ -766,6 +790,22 @@ export function renderPasScreen() {
   if (lbl) { const pct = Math.round((todayPas / goal) * 100); lbl.textContent = `Objectif : ${goal.toLocaleString('fr-FR')} pas${todayPas >= goal ? ' ✓ Atteint !' : ' (' + pct + '%)'}`; lbl.style.color = todayPas >= goal ? 'var(--rose)' : 'var(--text3)'; }
   const input = document.getElementById('pas-input'); if (input && todayPas) input.value = todayPas;
   const goalInput = document.getElementById('pas-goal-input'); if (goalInput) goalInput.value = goal;
+  // Inject "Jour passé" button next to history title if not already present
+  const histEl = document.getElementById('pas-history-list');
+  if (histEl && !document.getElementById('pas-retro-btn')) {
+    const parent = histEl.parentElement;
+    const titleEl = parent ? [...parent.children].find(c => c !== histEl && c.textContent?.includes('Historique')) : null;
+    if (titleEl) {
+      titleEl.style.cssText = (titleEl.style.cssText || '') + ';display:flex;justify-content:space-between;align-items:center;';
+      const btn = document.createElement('button');
+      btn.id = 'pas-retro-btn';
+      btn.className = 'btn btn-ghost btn-sm';
+      btn.style.cssText = 'width:auto;padding:5px 10px;font-size:12px;';
+      btn.textContent = '+ Jour passé';
+      btn.onclick = () => openAddPasRetro();
+      titleEl.appendChild(btn);
+    }
+  }
   renderPasChart(); renderPasHistory();
 }
 export function savePasToday() {
@@ -774,6 +814,33 @@ export function savePasToday() {
   if (!state.pas) state.pas = {};
   state.pas[todayStr()] = val; save(); renderPasScreen();
   showToast(val >= (state.pasGoal || 10000) ? '🎉 Objectif atteint !' : '👟 Pas enregistrés !');
+}
+
+export function openAddPasRetro() {
+  const today = todayStr();
+  openModal('👟 Ajouter des pas', `
+    <div class="field">
+      <label>Date</label>
+      <input type="date" id="pas-retro-date" value="${today}" max="${today}"/>
+    </div>
+    <div class="field">
+      <label>Nombre de pas</label>
+      <input type="number" id="pas-retro-val" min="0" max="100000" placeholder="Ex : 8500" inputmode="numeric"/>
+    </div>
+    <button class="btn btn-primary" style="margin-top:8px" onclick="savePasRetro()">💾 Enregistrer</button>`);
+}
+
+export function savePasRetro() {
+  const date = document.getElementById('pas-retro-date')?.value;
+  const val = parseInt(document.getElementById('pas-retro-val')?.value) || 0;
+  if (!date) { showToast('❌ Choisis une date'); return; }
+  if (val < 0) { showToast('❌ Nombre de pas invalide'); return; }
+  if (!state.pas) state.pas = {};
+  state.pas[date] = val;
+  save();
+  document.getElementById('modal-overlay').classList.remove('open');
+  renderPasScreen();
+  showToast(val >= (state.pasGoal || 10000) ? '🎉 Objectif atteint ce jour-là !' : '👟 Pas ajoutés !');
 }
 export function savePasGoal() {
   const val = parseInt(document.getElementById('pas-goal-input')?.value) || 10000;
