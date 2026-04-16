@@ -12,36 +12,52 @@ export function renderSanteScreen() {
   document.getElementById('hm-meas-val').textContent = lm ? lm.bust + 'cm' : '—';
   document.getElementById('hm-meas-date').textContent = lm ? formatDate(lm.date) : '';
 
-const wData = (h.weight || []).slice(-10);
-const maxW = Math.max(1, ...wData.map(x => x.val));
-const minW = Math.min(...wData.map(x => x.val));
-const range = maxW - minW || 1;
+const W = 300, H = 120, PL = 36, PR = 10, PT = 10, PB = 24;
+const innerW = W - PL - PR, innerH = H - PT - PB;
+const points = wData.map((x, i) => ({
+  px: PL + (i / (wData.length - 1)) * innerW,
+  py: PT + (1 - (x.val - minW) / range) * innerH,
+  ...x
+}));
+const polyline = points.map(p => `${p.px},${p.py}`).join(' ');
+const yTicks = 4;
 
-if (wData.length < 2) {
-  document.getElementById('health-weight-chart').innerHTML =
-    `<div style="color:var(--text3);font-size:13px;text-align:center;">Pas assez de données.</div>`;
-} else {
-  const W = 300, H = 80, PAD = 10;
-  const points = wData.map((x, i) => {
-    const px = PAD + (i / (wData.length - 1)) * (W - PAD * 2);
-    const py = H - PAD - ((x.val - minW) / range) * (H - PAD * 2);
-    return { px, py, ...x };
-  });
-  const polyline = points.map(p => `${p.px},${p.py}`).join(' ');
+document.getElementById('health-weight-chart').innerHTML = `
+  <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:120px;">
 
-  document.getElementById('health-weight-chart').innerHTML = `
-    <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:80px;">
-      <polyline points="${polyline}"
-        fill="none" stroke="var(--lilas)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-      ${points.map(p => `
-        <circle cx="${p.px}" cy="${p.py}" r="3.5" fill="var(--lilas)"/>
-        <text x="${p.px}" y="${p.py - 7}" text-anchor="middle"
-          style="font-size:8px;fill:var(--text3);">
-          ${new Date(p.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }).slice(0, 5)}
-        </text>
-      `).join('')}
-    </svg>`;
-}
+    <!-- Grille horizontale + axe Y -->
+    ${Array.from({ length: yTicks + 1 }, (_, i) => {
+      const val = (minW + (i / yTicks) * range).toFixed(1);
+      const y = PT + (1 - i / yTicks) * innerH;
+      return `
+        <line x1="${PL}" y1="${y}" x2="${W - PR}" y2="${y}"
+          stroke="var(--border)" stroke-width="0.5" stroke-dasharray="3,3"/>
+        <text x="${PL - 4}" y="${y + 3.5}" text-anchor="end"
+          style="font-size:8px;fill:var(--text3);">${val}</text>`;
+    }).join('')}
+
+    <!-- Axe X : dates -->
+    ${points.map(p => `
+      <line x1="${p.px}" y1="${PT}" x2="${p.px}" y2="${PT + innerH}"
+        stroke="var(--border)" stroke-width="0.5" stroke-dasharray="3,3"/>
+      <text x="${p.px}" y="${H - 4}" text-anchor="middle"
+        style="font-size:8px;fill:var(--text3);">
+        ${new Date(p.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }).slice(0, 5)}
+      </text>`
+    ).join('')}
+
+    <!-- Courbe -->
+    <polyline points="${polyline}"
+      fill="none" stroke="var(--lilas)" stroke-width="2"
+      stroke-linejoin="round" stroke-linecap="round"/>
+
+    <!-- Points -->
+    ${points.map(p => `
+      <circle cx="${p.px}" cy="${p.py}" r="3.5" fill="var(--lilas)"/>
+      <title>${p.val} kg</title>`
+    ).join('')}
+
+  </svg>`;
 
   document.getElementById('health-weight-list').innerHTML = wData.slice().reverse().slice(0, 5).map((x, i, arr) => {
     const prev = arr[i + 1]; const diff = prev ? (x.val - prev.val).toFixed(1) : null;
