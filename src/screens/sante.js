@@ -12,18 +12,36 @@ export function renderSanteScreen() {
   document.getElementById('hm-meas-val').textContent = lm ? lm.bust + 'cm' : '—';
   document.getElementById('hm-meas-date').textContent = lm ? formatDate(lm.date) : '';
 
-  const wData = (h.weight || []).slice(-10);
-  const maxW = Math.max(1, ...wData.map(x => x.val)); const minW = Math.min(...wData.map(x => x.val));
-  const range = maxW - minW || 1;
-  document.getElementById('health-weight-chart').innerHTML = wData.map((x, i) => {
-    const prev = wData[i - 1]; const trend = prev ? (x.val > prev.val ? '▲' : x.val < prev.val ? '▼' : '=') : null;
-    const h2 = Math.round(((x.val - minW) / range) * 60) + 8;
-    return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px;">
-      <div style="font-size:8px;color:${trend === '▲' ? 'var(--rouge)' : trend === '▼' ? 'var(--menthe)' : 'var(--text3)'};">${trend || ''}</div>
-      <div style="width:100%;height:${h2}px;background:var(--lilas);border-radius:3px 3px 0 0;opacity:.8;"></div>
-      <div style="font-size:8px;color:var(--text3);white-space:nowrap;">${new Date(x.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }).slice(0, 5)}</div>
-    </div>`;
-  }).join('');
+const wData = (h.weight || []).slice(-10);
+const maxW = Math.max(1, ...wData.map(x => x.val));
+const minW = Math.min(...wData.map(x => x.val));
+const range = maxW - minW || 1;
+
+if (wData.length < 2) {
+  document.getElementById('health-weight-chart').innerHTML =
+    `<div style="color:var(--text3);font-size:13px;text-align:center;">Pas assez de données.</div>`;
+} else {
+  const W = 300, H = 80, PAD = 10;
+  const points = wData.map((x, i) => {
+    const px = PAD + (i / (wData.length - 1)) * (W - PAD * 2);
+    const py = H - PAD - ((x.val - minW) / range) * (H - PAD * 2);
+    return { px, py, ...x };
+  });
+  const polyline = points.map(p => `${p.px},${p.py}`).join(' ');
+
+  document.getElementById('health-weight-chart').innerHTML = `
+    <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:80px;">
+      <polyline points="${polyline}"
+        fill="none" stroke="var(--lilas)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      ${points.map(p => `
+        <circle cx="${p.px}" cy="${p.py}" r="3.5" fill="var(--lilas)"/>
+        <text x="${p.px}" y="${p.py - 7}" text-anchor="middle"
+          style="font-size:8px;fill:var(--text3);">
+          ${new Date(p.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }).slice(0, 5)}
+        </text>
+      `).join('')}
+    </svg>`;
+}
 
   document.getElementById('health-weight-list').innerHTML = wData.slice().reverse().slice(0, 5).map((x, i, arr) => {
     const prev = arr[i + 1]; const diff = prev ? (x.val - prev.val).toFixed(1) : null;
