@@ -64,7 +64,7 @@ Object.assign(window, {
   // Sport - entrees
   renderEntrees2, deleteSessionEntry, editSessionEntry, saveSessionEntry,
   // Sport - pas
-  renderPasScreen, savePasToday, savePasGoal,
+  renderPasScreen, savePasToday, savePasGoal, openAddPasRetro, savePasRetro, openAddPasRetro, savePasRetro,
   // Challenges
   renderChallengesScreen, openNewChallenge, openChallengeSession,
   toggleChallengeActive, deleteChallenge, archiveChallenge, saveNewChallenge,
