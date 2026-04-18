@@ -1146,23 +1146,28 @@ function renderPasChart() {
       ${goalLine}
       ${bars}
     </svg>
-    <div style="margin-top:16px;">
-      <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">📊 Statistiques</div>
+`
+
+  // ── Stats dans la div séparée ──
+  const statsEl = document.getElementById('pas-stats-content');
+  if (statsEl) {
+    statsEl.innerHTML = `
+      <div style="font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;">📊 Statistiques</div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
-        <div style="background:var(--bg3);border-radius:var(--radius-sm);padding:10px 8px;text-align:center;">
-          <div style="font-size:17px;font-weight:700;color:var(--rose);font-family:var(--font-display);">${fmt(weekTotal)}</div>
-          <div style="font-size:10px;color:var(--text3);margin-top:3px;line-height:1.3;">Total semaine</div>
+        <div style="background:var(--bg3);border-radius:var(--radius-sm);padding:12px 8px;text-align:center;">
+          <div style="font-size:20px;font-weight:700;color:var(--rose);font-family:var(--font-display);">${fmt(weekTotal)}</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:4px;line-height:1.3;">Total semaine</div>
         </div>
-        <div style="background:var(--bg3);border-radius:var(--radius-sm);padding:10px 8px;text-align:center;">
-          <div style="font-size:17px;font-weight:700;color:var(--text);font-family:var(--font-display);">${fmt(globalAvg)}</div>
-          <div style="font-size:10px;color:var(--text3);margin-top:3px;line-height:1.3;">Moy. / jour</div>
+        <div style="background:var(--bg3);border-radius:var(--radius-sm);padding:12px 8px;text-align:center;">
+          <div style="font-size:20px;font-weight:700;color:var(--text);font-family:var(--font-display);">${fmt(globalAvg)}</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:4px;line-height:1.3;">Moy. / jour</div>
         </div>
-        <div style="background:var(--bg3);border-radius:var(--radius-sm);padding:10px 8px;text-align:center;">
-          <div style="font-size:17px;font-weight:700;color:${weekMax >= goal ? 'var(--menthe)' : 'var(--text)'};font-family:var(--font-display);">${fmt(weekMax)}</div>
-          <div style="font-size:10px;color:var(--text3);margin-top:3px;line-height:1.3;">Max semaine</div>
+        <div style="background:var(--bg3);border-radius:var(--radius-sm);padding:12px 8px;text-align:center;">
+          <div style="font-size:20px;font-weight:700;color:${weekMax >= goal ? 'var(--menthe)' : 'var(--text)'};font-family:var(--font-display);">${fmt(weekMax)}</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:4px;line-height:1.3;">Max semaine</div>
         </div>
-      </div>
-    </div>`;
+      </div>`;
+  };
 }
 
 
