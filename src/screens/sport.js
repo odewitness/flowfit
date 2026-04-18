@@ -97,12 +97,13 @@ export function renderWorkouts2() {
   }).join('');
 }
 
-export function openNewWorkout() { editingWorkoutId = null; tempExercises = []; workoutMode = 'sequential'; openModal('Nouvelle séance', workoutForm(null)); }
+export function openNewWorkout() { editingWorkoutId = null; tempExercises = []; workoutMode = 'sequential'; openModal('Nouvelle séance', workoutForm(null)); renderTempExercises(); }
 
 export function editWorkout(id) {
   const w = state.workouts.find(x => x.id === id); if (!w) return;
   editingWorkoutId = id; tempExercises = JSON.parse(JSON.stringify(w.exercises)); workoutMode = w.mode || 'sequential';
   openModal('Modifier la séance', workoutForm(w));
+  renderTempExercises(); selectMode(workoutMode);
 }
 
 function workoutForm(w) {
@@ -730,12 +731,12 @@ export function deleteInstructor(id) {
 // ── Entrées ──
 export function renderEntrees2() {
   const el = document.getElementById('entrees-list2'); if (!el) return;
-  const sorted = [...state.sessions].sort((a, b) => b.date.localeCompare(a.date));
-  if (!sorted.length) { el.innerHTML = `<div class="card" style="text-align:center;color:var(--text2);">Aucune séance enregistrée encore.</div>`; return; }
-  el.innerHTML = sorted.map(s => {
+
+  // Sessions de sport
+  const sessionCards = [...state.sessions].sort((a, b) => b.date.localeCompare(a.date)).map(s => {
     const ph = s.phase ? PHASES[s.phase] : null;
     const sets = s.logs?.reduce((a, l) => a + (l.completedSets?.length || 0), 0) || 0;
-    return `<div class="card">
+    return { date: s.date, html: `<div class="card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
         <div><div style="font-size:15px;font-weight:600;">${escHtml(s.workoutName)}</div>
         <div style="font-size:12px;color:var(--text2);margin-top:2px;">${formatDate(s.date)}${ph ? ' · <span class="pill ' + ph.cls + '" style="font-size:9px;padding:2px 7px;">' + ph.emoji + ' ' + ph.label + '</span>' : ''}</div></div>
@@ -751,10 +752,62 @@ export function renderEntrees2() {
         <button class="btn btn-ghost btn-sm" style="flex:1" onclick="editSessionEntry('${s.id}')">✏️ Modifier</button>
         <button class="btn btn-ghost btn-sm" style="flex:1;color:var(--rouge);border-color:rgba(212,130,122,.25);" onclick="deleteSessionEntry('${s.id}')">🗑 Supprimer</button>
       </div>
-    </div>`;
-  }).join('');
+    </div>` };
+  });
+
+  // Entrées de pas
+  const pasEntries = Object.entries(state.pas || {}).sort((a, b) => b[0].localeCompare(a[0])).map(([date, val]) => {
+    const goal = state.pasGoal || 10000;
+    const reached = val >= goal;
+    return { date, html: `<div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
+        <div><div style="font-size:15px;font-weight:600;">👟 Pas</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:2px;">${formatDate(date)}</div></div>
+        ${reached ? '<span style="font-size:18px;">🏆</span>' : ''}
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+        <span class="pill pill-neutre" style="font-size:10px;">${val.toLocaleString('fr-FR')} pas</span>
+        <span class="pill pill-neutre" style="font-size:10px;color:${reached ? 'var(--menthe)' : 'var(--text3)'};">${reached ? '✓ Objectif atteint' : Math.round((val / goal) * 100) + '% objectif'}</span>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-ghost btn-sm" style="flex:1" onclick="editPasEntry('${date}')">✏️ Modifier</button>
+        <button class="btn btn-ghost btn-sm" style="flex:1;color:var(--rouge);border-color:rgba(212,130,122,.25);" onclick="deletePasEntry('${date}')">🗑 Supprimer</button>
+      </div>
+    </div>` };
+  });
+
+  // Fusionner et trier par date décroissante
+  const all = [...sessionCards, ...pasEntries].sort((a, b) => b.date.localeCompare(a.date));
+  if (!all.length) { el.innerHTML = `<div class="card" style="text-align:center;color:var(--text2);">Aucune entrée enregistrée encore.</div>`; return; }
+  el.innerHTML = all.map(x => x.html).join('');
 }
 export function deleteSessionEntry(id) { if (!confirm('Supprimer cette séance ?')) return; state.sessions = state.sessions.filter(s => s.id !== id); save(); renderEntrees2(); showToast('🗑 Séance supprimée'); }
+
+export function deletePasEntry(date) {
+  if (!confirm('Supprimer cette entrée de pas ?')) return;
+  if (state.pas) delete state.pas[date];
+  save(); renderEntrees2(); renderPasScreen(); showToast('🗑 Entrée supprimée');
+}
+export function editPasEntry(date) {
+  const val = (state.pas || {})[date] || 0;
+  openModal('✏️ Modifier les pas', `
+    <div class="field"><label>Date</label><input type="date" id="edit-pas-date" value="${date}" max="${todayStr()}"/></div>
+    <div class="field"><label>Nombre de pas</label><input type="number" id="edit-pas-val" value="${val}" min="0" max="100000" inputmode="numeric"/></div>
+    <button class="btn btn-primary" style="margin-top:8px" onclick="savePasEntry('${date}')">💾 Enregistrer</button>`);
+}
+export function savePasEntry(oldDate) {
+  const newDate = document.getElementById('edit-pas-date')?.value;
+  const val = parseInt(document.getElementById('edit-pas-val')?.value) || 0;
+  if (!newDate) { showToast('❌ Choisis une date'); return; }
+  if (val < 0) { showToast('❌ Nombre de pas invalide'); return; }
+  if (!state.pas) state.pas = {};
+  if (oldDate !== newDate) delete state.pas[oldDate];
+  state.pas[newDate] = val;
+  save();
+  document.getElementById('modal-overlay').classList.remove('open');
+  renderEntrees2(); renderPasScreen();
+  showToast('✅ Pas mis à jour !');
+}
 export function editSessionEntry(id) {
   const s = state.sessions.find(x => x.id === id); if (!s) return;
   openModal('✏️ Modifier la séance', `
