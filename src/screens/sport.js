@@ -9,39 +9,154 @@ let _videoSubTab = 'liste'; // 'liste' | 'instructeurs'
 const _SPORT_TABS = ['seances', 'videos', 'pas', 'entrees', 'challenges'];
 let _swipeInitDone = false;
 
+// ── CSS slider (injecté une seule fois) ──
+function _injectSliderCSS() {
+  if (document.getElementById('sport-slider-css')) return;
+  const style = document.createElement('style');
+  style.id = 'sport-slider-css';
+  style.textContent = `
+    .sport-slider-viewport { overflow: hidden; position: relative; width: 100%; }
+    .sport-slider-track { display: flex; width: 500%; will-change: transform; }
+    .sport-slider-track > .sport-slide { width: 20%; flex-shrink: 0; min-width: 0; }
+    .sport-slider-track.is-animating { transition: transform 0.28s cubic-bezier(0.25,0.46,0.45,0.94); }
+    .sport-tab-indicator { position:absolute; bottom:0; height:2px; background:var(--rose); border-radius:2px 2px 0 0; transition: left 0.28s cubic-bezier(0.25,0.46,0.45,0.94), width 0.28s cubic-bezier(0.25,0.46,0.45,0.94); pointer-events:none; }
+  `;
+  document.head.appendChild(style);
+}
+
+// ── Construit la structure viewport > track > slides ──
+function _initSliderStructure() {
+  const firstPanel = document.getElementById('sport-panel-seances');
+  if (!firstPanel) return false;
+  const container = firstPanel.parentElement;
+  if (!container || container.classList.contains('sport-slider-viewport')) return true;
+  _injectSliderCSS();
+  const panels = _SPORT_TABS.map(t => document.getElementById('sport-panel-' + t)).filter(Boolean);
+  const viewport = document.createElement('div');
+  viewport.className = 'sport-slider-viewport';
+  const track = document.createElement('div');
+  track.className = 'sport-slider-track';
+  track.id = 'sport-slider-track';
+  panels.forEach(p => {
+    const slide = document.createElement('div');
+    slide.className = 'sport-slide';
+    p.style.display = '';
+    slide.appendChild(p);
+    track.appendChild(slide);
+  });
+  viewport.appendChild(track);
+  container.appendChild(viewport);
+  // Indicateur animé sur la barre d'onglets
+  const tabBar = document.getElementById('sport-tab-seances')?.parentElement;
+  if (tabBar && !tabBar.querySelector('.sport-tab-indicator')) {
+    tabBar.style.position = 'relative';
+    const ind = document.createElement('div');
+    ind.className = 'sport-tab-indicator';
+    tabBar.appendChild(ind);
+  }
+  return true;
+}
+
+function _updateTabIndicator(tab, animate) {
+  const btn = document.getElementById('sport-tab-' + tab);
+  const ind = document.querySelector('.sport-tab-indicator');
+  if (!btn || !ind) return;
+  ind.style.transition = animate ? '' : 'none';
+  ind.style.left = btn.offsetLeft + 'px';
+  ind.style.width = btn.offsetWidth + 'px';
+}
+
+function _slideTo(tab, animate) {
+  const track = document.getElementById('sport-slider-track');
+  if (!track) return;
+  const idx = _SPORT_TABS.indexOf(tab);
+  if (idx < 0) return;
+  const pct = idx * 20; // 100% / 5 onglets
+  if (animate) {
+    track.classList.add('is-animating');
+    track.addEventListener('transitionend', () => track.classList.remove('is-animating'), { once: true });
+  } else {
+    track.classList.remove('is-animating');
+  }
+  track.style.transform = `translateX(-${pct}%)`;
+  _updateTabIndicator(tab, animate);
+}
+
 function _initSportSwipe() {
   if (_swipeInitDone) return;
-  const container = document.getElementById('sport-panel-seances')?.parentElement;
-  if (!container) return;
+  const track = document.getElementById('sport-slider-track');
+  if (!track) return;
   _swipeInitDone = true;
-  let _tx = 0, _ty = 0;
-  container.addEventListener('touchstart', e => {
-    _tx = e.changedTouches[0].screenX;
-    _ty = e.changedTouches[0].screenY;
+  let _tx = 0, _ty = 0, _dragging = false, _locked = false, _startX = 0;
+
+  function getCurrentTranslateX() {
+    return new DOMMatrix(window.getComputedStyle(track).transform).m41;
+  }
+
+  track.addEventListener('touchstart', e => {
+    _tx = e.changedTouches[0].clientX;
+    _ty = e.changedTouches[0].clientY;
+    _dragging = false; _locked = false;
+    _startX = getCurrentTranslateX();
+    track.classList.remove('is-animating');
   }, { passive: true });
-  container.addEventListener('touchend', e => {
-    const dx = e.changedTouches[0].screenX - _tx;
-    const dy = e.changedTouches[0].screenY - _ty;
-    // Swipe horizontal seulement (>40px et plus horizontal que vertical)
-    if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy) * 1.2) return;
+
+  track.addEventListener('touchmove', e => {
+    if (_locked) return;
+    const dx = e.changedTouches[0].clientX - _tx;
+    const dy = e.changedTouches[0].clientY - _ty;
+    if (!_dragging && (Math.abs(dx) > 6 || Math.abs(dy) > 6)) {
+      if (Math.abs(dy) > Math.abs(dx) * 0.8) { _locked = true; return; }
+      _dragging = true;
+    }
+    if (!_dragging) return;
+    const trackW = track.parentElement.offsetWidth;
+    let newX = _startX + dx;
+    const minX = -((_SPORT_TABS.length - 1) * trackW);
+    if (newX > 0) newX = dx * 0.2;
+    if (newX < minX) newX = minX + (newX - minX) * 0.2;
+    track.style.transform = `translateX(${newX}px)`;
+    // Indicateur suit le doigt en temps réel
+    const ind = document.querySelector('.sport-tab-indicator');
+    if (ind) {
+      const progress = -newX / trackW;
+      const i1 = Math.max(0, Math.min(_SPORT_TABS.length - 2, Math.floor(progress)));
+      const frac = Math.max(0, Math.min(1, progress - i1));
+      const b1 = document.getElementById('sport-tab-' + _SPORT_TABS[i1]);
+      const b2 = document.getElementById('sport-tab-' + _SPORT_TABS[i1 + 1]);
+      if (b1 && b2) {
+        ind.style.transition = 'none';
+        ind.style.left = (b1.offsetLeft + (b2.offsetLeft - b1.offsetLeft) * frac) + 'px';
+        ind.style.width = (b1.offsetWidth + (b2.offsetWidth - b1.offsetWidth) * frac) + 'px';
+      }
+    }
+  }, { passive: true });
+
+  track.addEventListener('touchend', e => {
+    if (!_dragging) return;
+    const dx = e.changedTouches[0].clientX - _tx;
+    const trackW = track.parentElement.offsetWidth;
     const idx = _SPORT_TABS.indexOf(_sportTab);
-    if (dx < 0 && idx < _SPORT_TABS.length - 1) switchSportTab(_SPORT_TABS[idx + 1]);
-    else if (dx > 0 && idx > 0) switchSportTab(_SPORT_TABS[idx - 1]);
+    let targetIdx = idx;
+    if (dx < -(trackW * 0.25) && idx < _SPORT_TABS.length - 1) targetIdx = idx + 1;
+    else if (dx > (trackW * 0.25) && idx > 0) targetIdx = idx - 1;
+    switchSportTab(_SPORT_TABS[targetIdx]);
   }, { passive: true });
 }
 
-export function renderSportScreen() { switchSportTab(_sportTab, true); _initSportSwipe(); }
+export function renderSportScreen() {
+  _initSliderStructure();
+  switchSportTab(_sportTab, true);
+  setTimeout(() => _initSportSwipe(), 50);
+}
 
 export function switchSportTab(tab, force) {
   if (_sportTab === tab && !force) return;
   _sportTab = tab;
-  const panels = ['seances', 'videos', 'pas', 'entrees', 'challenges'];
-  panels.forEach(p => {
-    const el = document.getElementById('sport-panel-' + p);
+  _SPORT_TABS.forEach(p => {
     const btn = document.getElementById('sport-tab-' + p);
-    if (!el || !btn) return;
+    if (!btn) return;
     const active = p === tab;
-    el.style.display = active ? '' : 'none';
     btn.style.background = active ? 'var(--bg2)' : 'none';
     btn.style.color = active ? 'var(--text)' : 'var(--text2)';
     btn.style.boxShadow = active ? '0 1px 3px rgba(180,130,110,.1)' : 'none';
@@ -51,6 +166,7 @@ export function switchSportTab(tab, force) {
   if (tab === 'pas')        renderPasScreen();
   if (tab === 'entrees')    renderEntrees2();
   if (tab === 'challenges') renderChallengesScreen();
+  _slideTo(tab, !force);
 }
 
 // ── Helpers instructeurs ──
