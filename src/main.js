@@ -21,6 +21,7 @@ import {
   openInstructorsManager, editInstructor,
   saveInstructorEdit, deleteInstructor, switchVideoSubTab,
   deletePasEntry, editPasEntry, savePasEntry,
+  pasWeekPrev, pasWeekNext, pasWeekToday,
 } from './screens/sport.js';
 import {
   renderChallengesScreen, openNewChallenge, openChallengeSession,
@@ -67,6 +68,7 @@ Object.assign(window, {
   // Sport - pas
   renderPasScreen, savePasToday, savePasGoal, openAddPasRetro, savePasRetro, openAddPasRetro, savePasRetro,
   deletePasEntry, editPasEntry, savePasEntry,
+  pasWeekPrev, pasWeekNext, pasWeekToday,
   // Challenges
   renderChallengesScreen, openNewChallenge, openChallengeSession,
   toggleChallengeActive, deleteChallenge, archiveChallenge, saveNewChallenge,

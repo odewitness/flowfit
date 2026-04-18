@@ -1016,17 +1016,124 @@ export function savePasGoal() {
   if (val < 100) { showToast('❌ Objectif trop bas'); return; }
   state.pasGoal = val; save(); renderPasScreen(); showToast('✅ Objectif mis à jour !');
 }
-function renderPasChart() {
-  const el = document.getElementById('pas-week-chart'); if (!el) return;
-  const goal = state.pasGoal || 10000, pas = state.pas || {};
-  const days = Array.from({ length: 7 }, (_, i) => { const d = new Date(); d.setDate(d.getDate() - (6 - i)); return d.toISOString().slice(0, 10); });
-  const maxVal = Math.max(goal, ...days.map(d => pas[d] || 0));
-  el.innerHTML = days.map(d => {
-    const v = pas[d] || 0, h = Math.round((v / maxVal) * 78) + 4, reached = v >= goal;
-    const label = new Date(d + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'short' }).slice(0, 2);
-    return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;"><div style="font-size:9px;color:${reached ? 'var(--menthe)' : 'var(--text3)'};">${v ? v.toLocaleString('fr-FR') : ''}</div><div style="width:100%;height:${h}px;background:${v ? (reached ? 'var(--menthe)' : 'var(--rose)') : 'var(--bg3)'};border-radius:4px 4px 0 0;"></div><div style="font-size:10px;color:var(--text3);">${label}</div></div>`;
-  }).join('');
+// ── Graphique pas : navigation par semaine (Lun–Dim) ──
+let _pasWeekOffset = 0; // 0 = semaine courante, -1 = semaine passée, etc.
+
+/** Retourne le lundi de la semaine ISO contenant `date` (Date object) */
+function _getMonday(date) {
+  const d = new Date(date);
+  const day = d.getDay(); // 0=dim
+  const diff = (day === 0 ? -6 : 1 - day);
+  d.setDate(d.getDate() + diff);
+  d.setHours(0, 0, 0, 0);
+  return d;
 }
+
+/** Les 7 dates ISO (lun→dim) de la semaine offset */
+function _getWeekDates(offset) {
+  const now = new Date();
+  const monday = _getMonday(now);
+  monday.setDate(monday.getDate() + offset * 7);
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(monday);
+    d.setDate(d.getDate() + i);
+    return d.toISOString().slice(0, 10);
+  });
+}
+
+export function pasWeekPrev()  { _pasWeekOffset--; renderPasChart(); }
+export function pasWeekNext()  { if (_pasWeekOffset < 0) { _pasWeekOffset++; renderPasChart(); } }
+export function pasWeekToday() { _pasWeekOffset = 0; renderPasChart(); }
+
+function renderPasChart() {
+  const container = document.getElementById('pas-week-chart');
+  if (!container) return;
+
+  const goal = state.pasGoal || 10000;
+  const pas = state.pas || {};
+  const today = todayStr();
+  const dates = _getWeekDates(_pasWeekOffset);
+  const isCurrentWeek = _pasWeekOffset === 0;
+
+  // ── Header navigation ──
+  const monday = dates[0], sunday = dates[6];
+  const fmtShort = d => new Date(d + 'T12:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+  const weekLabel = `${fmtShort(monday)} – ${fmtShort(sunday)}`;
+
+  // ── Données ──
+  const values = dates.map(d => pas[d] || 0);
+  const maxVal = Math.max(goal * 1.1, ...values, 1);
+
+  // ── Dimensions SVG ──
+  const W = 340, H = 160;
+  const marginLeft = 42, marginRight = 8, marginTop = 28, marginBottom = 32;
+  const chartW = W - marginLeft - marginRight;
+  const chartH = H - marginTop - marginBottom;
+  const barW = Math.floor(chartW / 7 * 0.55);
+  const gap  = chartW / 7;
+
+  // ── Lignes de grille ──
+  const gridLines = [0, 0.25, 0.5, 0.75, 1].map(frac => {
+    const val = Math.round(maxVal * frac);
+    const y = marginTop + chartH - (frac * chartH);
+    const label = val >= 1000 ? (val / 1000).toFixed(val % 1000 === 0 ? 0 : 1) + 'k' : val;
+    return `
+      <line x1="${marginLeft}" y1="${y}" x2="${W - marginRight}" y2="${y}" stroke="var(--border)" stroke-width="1" stroke-dasharray="${frac === 0 ? 'none' : '3,3'}"/>
+      <text x="${marginLeft - 4}" y="${y + 4}" text-anchor="end" font-size="9" fill="var(--text3)">${label}</text>`;
+  }).join('');
+
+  // ── Ligne objectif ──
+  const goalY = marginTop + chartH - (goal / maxVal * chartH);
+  const goalLine = `
+    <line x1="${marginLeft}" y1="${goalY}" x2="${W - marginRight}" y2="${goalY}" stroke="var(--menthe)" stroke-width="1.5" stroke-dasharray="5,3" opacity="0.7"/>
+    <text x="${W - marginRight}" y="${goalY - 3}" text-anchor="end" font-size="8" fill="var(--menthe)" opacity="0.9">objectif</text>`;
+
+  // ── Barres ──
+  const DAY_LABELS = ['Lu', 'Ma', 'Me', 'Je', 'Ve', 'Sa', 'Di'];
+  const bars = dates.map((d, i) => {
+    const v = values[i];
+    const reached = v >= goal;
+    const isToday = d === today;
+    const isFuture = d > today;
+    const barH = v > 0 ? Math.max(3, Math.round((v / maxVal) * chartH)) : 0;
+    const x = marginLeft + i * gap + gap / 2 - barW / 2;
+    const y = marginTop + chartH - barH;
+    const fill = isFuture ? 'var(--bg3)' : reached ? 'var(--menthe)' : v > 0 ? 'var(--rose)' : 'var(--bg3)';
+    const todayRect = isToday ? `<rect x="${x - 2}" y="${marginTop - 6}" width="${barW + 4}" height="${chartH + 10}" rx="4" fill="var(--rose-lt)" opacity="0.5"/>` : '';
+    const valLabel = v > 0 && !isFuture ? (() => {
+      const txt = v >= 1000 ? (v / 1000).toFixed(1).replace('.0','') + 'k' : v;
+      return `<text x="${x + barW / 2}" y="${y - 4}" text-anchor="middle" font-size="8.5" font-weight="${reached ? '700' : '500'}" fill="${reached ? 'var(--menthe)' : 'var(--text2)'}">${txt}</text>`;
+    })() : '';
+    const bar = v > 0 ? `<rect x="${x}" y="${y}" width="${barW}" height="${barH}" rx="3" fill="${fill}"/>` : `<rect x="${x}" y="${marginTop + chartH - 3}" width="${barW}" height="3" rx="1.5" fill="${fill}" opacity="0.4"/>`;
+    const dayLbl = `<text x="${x + barW / 2}" y="${H - marginBottom + 14}" text-anchor="middle" font-size="10" font-weight="${isToday ? '700' : '400'}" fill="${isToday ? 'var(--rose)' : 'var(--text3)'}">${DAY_LABELS[i]}</text>`;
+    const dateLbl = `<text x="${x + barW / 2}" y="${H - marginBottom + 25}" text-anchor="middle" font-size="8" fill="${isToday ? 'var(--rose)' : 'var(--text3)'}" opacity="0.7">${new Date(d + 'T12:00:00').getDate()}</text>`;
+    return todayRect + bar + valLabel + dayLbl + dateLbl;
+  }).join('');
+
+  // ── Total semaine ──
+  const weekTotal = values.reduce((a, b) => a + b, 0);
+  const daysWithData = values.filter(v => v > 0).length;
+
+  container.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+      <button onclick="pasWeekPrev()" style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--text2);padding:4px 8px;border-radius:8px;line-height:1;" title="Semaine précédente">‹</button>
+      <div style="text-align:center;">
+        <div style="font-size:12px;font-weight:600;color:var(--text);">${isCurrentWeek ? 'Cette semaine' : weekLabel}</div>
+        ${!isCurrentWeek ? `<button onclick="pasWeekToday()" style="background:var(--rose-lt);border:1px solid rgba(232,130,154,.3);color:var(--rose);font-size:10px;font-weight:600;border-radius:20px;padding:2px 10px;cursor:pointer;margin-top:3px;">Aujourd'hui</button>` : `<div style="font-size:10px;color:var(--text3);margin-top:1px;">${weekLabel}</div>`}
+      </div>
+      <button onclick="pasWeekNext()" style="background:none;border:none;cursor:pointer;font-size:18px;color:${_pasWeekOffset < 0 ? 'var(--text2)' : 'var(--text3)'};padding:4px 8px;border-radius:8px;line-height:1;" ${_pasWeekOffset >= 0 ? 'disabled' : ''} title="Semaine suivante">›</button>
+    </div>
+    <svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;">
+      ${gridLines}
+      ${goalLine}
+      ${bars}
+    </svg>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;padding:0 2px;">
+      <div style="font-size:11px;color:var(--text3);">${daysWithData} jour${daysWithData > 1 ? 's' : ''} tracké${daysWithData > 1 ? 's' : ''}</div>
+      <div style="font-size:12px;font-weight:600;color:var(--text);">Total : <span style="color:var(--rose);">${weekTotal.toLocaleString('fr-FR')}</span> pas</div>
+    </div>`;
+}
+
 function renderPasHistory() {
   const el = document.getElementById('pas-history-list'); if (!el) return;
   const pas = state.pas || {}, goal = state.pasGoal || 10000;
